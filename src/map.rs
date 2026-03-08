@@ -12,10 +12,12 @@
 //! - Callers receive `&[u8]` with a lifetime tied to [`FileData`], preventing
 //!   use-after-unmap.
 //!
-//! **Known limitation:** if the underlying file is truncated or modified by
-//! another process while mapped, the OS may deliver SIGBUS (Unix) or an access
-//! violation (Windows). This is inherent to memory-mapped I/O and cannot be
-//! fully prevented without advisory locking.
+//! **Known limitation:** a shared advisory lock is acquired before mapping
+//! (via `fs4`), which mitigates SIGBUS from concurrent truncation when
+//! cooperating processes also use advisory locks. However, advisory locks are
+//! not mandatory — if another process truncates the file without checking the
+//! lock, the OS may still deliver SIGBUS (Unix) or an access violation
+//! (Windows). This is inherent to memory-mapped I/O.
 
 use std::fs::File;
 use std::io;
