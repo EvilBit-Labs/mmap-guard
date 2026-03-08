@@ -49,6 +49,12 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 - The docs workflow builds rustdoc with `--document-private-items` -- see Rustdoc section above for link pitfalls.
 - Always verify pinned action SHAs with `gh api repos/{owner}/{repo}/commits/{sha} --jq '.sha'` before using them. Do not fabricate SHAs.
 
+## Local CI with `act`
+
+- `act` defaults to `push` event -- schedule-only workflows need `workflow_dispatch` passed as the event argument.
+- `act` Docker containers run as root -- Unix permission tests (e.g., `chmod 000` → expect `PermissionDenied`) false-positive because root bypasses file permission checks.
+- Use `--container-architecture linux/amd64` on Apple Silicon to avoid image pull failures.
+
 ## Pre-commit Hooks
 
 - `mdformat` reformats markdown on commit -- if your commit is rejected, re-stage the reformatted files and create a new commit. Do not amend.
@@ -72,6 +78,7 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 - Property tests (`proptest`) run on stable and are part of the normal test suite. The `read_bounded` proptest is a unit test inside `src/load.rs` (not in `tests/`) because it needs access to the private function.
 - `rust-toolchain.toml` overrides `rustup default` -- CI workflows that need nightly must set `RUSTUP_TOOLCHAIN: nightly` as an env var on the run step, not just install the toolchain.
 - `read_bounded` needs `#[allow(unreachable_pub)]` and `#[allow(clippy::missing_errors_doc)]` because it's `pub` (for re-export) in a private module -- clippy flags both even though the function is `#[doc(hidden)]`.
+- `#[derive(Arbitrary)]` generates code referencing `arbitrary::` by path -- `use libfuzzer_sys::arbitrary::{self, Arbitrary}` requires the `self` import. Do not remove it; the derive macro will fail without it.
 
 ## load / load_stdin
 
