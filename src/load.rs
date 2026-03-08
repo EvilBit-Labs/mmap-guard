@@ -269,13 +269,6 @@ mod tests {
     }
 
     #[test]
-    fn dash_routes_to_stdin_via_resolve_source() {
-        // Verify that "-" is routed to stdin without performing an actual
-        // stdin read (which can block in interactive environments).
-        assert_eq!(resolve_source(Path::new("-")), LoadSource::Stdin);
-    }
-
-    #[test]
     #[allow(clippy::exit)] // subprocess helper must exit to avoid running the parent path
     fn load_dash_routes_to_stdin() {
         use std::fs;
