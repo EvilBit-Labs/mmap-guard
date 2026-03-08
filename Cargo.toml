@@ -7,7 +7,7 @@ authors = [
     "KryptoKat <kryptokat@evilbitlabs.io>",
 ]
 description = "Safe, guarded memory-mapped file I/O for Rust"
-license = "Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/EvilBit-Labs/mmap-guard"
 documentation = "https://docs.rs/mmap-guard"
 keywords = ["mmap", "memmap", "memory-map", "file", "io"]
@@ -98,6 +98,7 @@ similar_names            = "warn"
 too_many_lines           = "warn"
 
 [dependencies]
+fs4 = "0.13.1"
 memmap2 = "0.9.10"
 
 [dev-dependencies]

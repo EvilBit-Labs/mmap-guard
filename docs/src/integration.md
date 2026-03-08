@@ -66,19 +66,33 @@ fn run(path: &Path) -> io::Result<()> {
 
 ### CLI tool with stdin support
 
+`load` handles `"-"` internally, so a simple call covers both files and stdin:
+
 ```rust,ignore
-use mmap_guard::{load, load_stdin, FileData};
+use mmap_guard::{load, FileData};
 use std::io;
 
 fn main() -> io::Result<()> {
-    let args: Vec<String> = std::env::args().collect();
-
-    let data: FileData = match args.get(1).map(String::as_str) {
-        Some("-") | None => load_stdin()?,
-        Some(path) => load(path)?,
-    };
+    let path = std::env::args().nth(1).unwrap_or_else(|| "-".into());
+    let data: FileData = load(&path)?;
 
     // Process data uniformly regardless of source
+    println!("{} bytes", data.len());
+    Ok(())
+}
+```
+
+**Advanced: custom stdin cap**
+
+For callers that need a different stdin limit, call `load_stdin` directly:
+
+```rust,ignore
+use mmap_guard::{load_stdin, FileData};
+use std::io;
+
+fn main() -> io::Result<()> {
+    // Cap stdin reads to 256 MiB
+    let data: FileData = load_stdin(Some(256 * 1024 * 1024))?;
     println!("{} bytes", data.len());
     Ok(())
 }

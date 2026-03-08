@@ -25,10 +25,11 @@ Projects that enforce `#![forbid(unsafe_code)]` cannot call `memmap2::Mmap::map(
 ## Features
 
 - **Safe mmap construction** — wraps `memmap2::Mmap::map()` with pre-flight checks (empty file detection, permission errors)
+- **Advisory file locking** — acquires a shared advisory lock (via `fs4`) before mapping; returns `io::ErrorKind::WouldBlock` on lock contention
 - **Platform quirk mitigation** — documents and (where possible) mitigates SIGBUS/access violations from file truncation
 - **Unified read API** — returns `&[u8]` whether backed by mmap or a heap buffer (for stdin/non-seekable inputs)
 - **Zero unsafe for consumers** — exactly one `unsafe` block, fully documented with a `// SAFETY:` comment
-- **Minimal dependencies** — only `memmap2` at runtime
+- **Minimal dependencies** — `memmap2` and `fs4` at runtime
 
 ## Quick Start
 
@@ -56,40 +57,40 @@ println!("first byte: {:#04x}", data[0]);
 For CLI tools that accept both file paths and stdin:
 
 ```rust
-use mmap_guard::{load, load_stdin};
-use std::path::Path;
+use mmap_guard::load;
 
-let path = Path::new("input.txt");
-let data = if path == Path::new("-") {
-    load_stdin()?
-} else {
-    load(path)?
-};
+// load() handles both file paths and stdin ("-" with a 1 GiB default cap).
+let data = load("input.txt")?;
+
+// For a custom stdin byte limit, call load_stdin directly:
+// use mmap_guard::load_stdin;
+// let data = load_stdin(Some(10 * 1024 * 1024))?; // 10 MiB cap
+// let data = load_stdin(None)?;                    // unlimited
 ```
 
 ## Architecture
 
 ```mermaid
 graph TD
-    load["load()"] --> map_file
-    load_stdin["load_stdin()"] --> FileData
+    load["load(path)"] -->|path == &quot;-&quot;| load_stdin
+    load -->|other paths| map_file
+    load_stdin["load_stdin(max_bytes)"] --> FileData
     map_file["map_file()"] --> unsafe["unsafe { Mmap::map() }"]
     unsafe --> FileData["FileData<br/>Deref&lt;Target=[u8]&gt;"]
-    FileData --- Mapped["Mapped(Mmap)"]
+    FileData --- Mapped["Mapped(Mmap, File)"]
     FileData --- Loaded["Loaded(Vec&lt;u8&gt;)"]
 ```
 
-| Module             | Purpose                                                            |
-| ------------------ | ------------------------------------------------------------------ |
-| `src/lib.rs`       | Crate-level docs, re-exports public API                            |
-| `src/map.rs`       | `map_file()` with pre-flight stat check; the single `unsafe` block |
-| `src/load.rs`      | `load()` delegates to `map_file()`; `load_stdin()` reads to heap   |
-| `src/file_data.rs` | `FileData` enum (`Mapped` / `Loaded`), `Deref`, `AsRef`            |
+| Module             | Purpose                                                             |
+| ------------------ | ------------------------------------------------------------------- |
+| `src/lib.rs`       | Crate-level docs, re-exports public API                             |
+| `src/map.rs`       | `map_file()` with pre-flight stat check; the single `unsafe` block  |
+| `src/load.rs`      | `load()` routes `"-"` to `load_stdin()`, others to `map_file()`     |
+| `src/file_data.rs` | `FileData` enum (`Mapped(Mmap, File)` / `Loaded`), `Deref`, `AsRef` |
 
 ## What It Does NOT Do
 
 - Provide mutable/writable mappings
-- Manage file locking or concurrency
 - Abstract over async I/O
 - Implement its own mmap syscalls (delegates entirely to `memmap2`)
 
@@ -98,7 +99,8 @@ graph TD
 This crate contains exactly **one** `unsafe` block — the call to `memmap2::Mmap::map()`. The safety contract is maintained through:
 
 - File opened read-only (`File::open()`)
-- File descriptor kept alive through ownership in `FileData`
+- Shared advisory lock acquired via `fs4` before mapping — contention returns `io::ErrorKind::WouldBlock`
+- File descriptor and lock held through ownership in `FileData::Mapped(Mmap, File)` — released on drop
 - No mutable aliasing (read-only mappings only)
 - `#![deny(clippy::undocumented_unsafe_blocks)]` enforced
 
@@ -123,7 +125,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
-Licensed under the Apache License 2.0 — see [LICENSE](LICENSE) for details.
+Licensed under either of [Apache License 2.0](LICENSE-APACHE) or [MIT License](LICENSE-MIT), at your option.
 
 ## Acknowledgments
 
@@ -145,7 +147,7 @@ Licensed under the Apache License 2.0 — see [LICENSE](LICENSE) for details.
 [issues-link]: https://github.com/EvilBit-Labs/mmap-guard/issues
 [last-commit-badge]: https://img.shields.io/github/last-commit/EvilBit-Labs/mmap-guard?style=flat-square&logo=github
 [license-badge]: https://img.shields.io/github/license/EvilBit-Labs/mmap-guard?style=flat-square&logo=github
-[license-link]: https://github.com/EvilBit-Labs/mmap-guard/blob/main/LICENSE
+[license-link]: https://github.com/EvilBit-Labs/mmap-guard/blob/main/LICENSE-APACHE
 [msrv-badge]: https://img.shields.io/crates/msrv/mmap-guard?style=flat-square&logo=rust
 [scorecard-badge]: https://api.scorecard.dev/projects/github.com/EvilBit-Labs/mmap-guard/badge?style=flat-square
 [scorecard-link]: https://scorecard.dev/viewer/?uri=github.com/EvilBit-Labs/mmap-guard

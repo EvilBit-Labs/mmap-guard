@@ -92,12 +92,12 @@ cargo doc --open
 
 mmap-guard is a thin library with four source files:
 
-| Module             | Purpose                                                            |
-| ------------------ | ------------------------------------------------------------------ |
-| `src/lib.rs`       | Crate-level docs, re-exports public API                            |
-| `src/map.rs`       | `map_file()` with pre-flight stat check; the single `unsafe` block |
-| `src/load.rs`      | `load()` delegates to `map_file()`; `load_stdin()` reads to heap   |
-| `src/file_data.rs` | `FileData` enum (`Mapped` / `Loaded`), `Deref`, `AsRef`            |
+| Module             | Purpose                                                             |
+| ------------------ | ------------------------------------------------------------------- |
+| `src/lib.rs`       | Crate-level docs, re-exports public API                             |
+| `src/map.rs`       | `map_file()` with pre-flight stat check; the single `unsafe` block  |
+| `src/load.rs`      | `load()` routes `"-"` to `load_stdin()`, others to `map_file()`     |
+| `src/file_data.rs` | `FileData` enum (`Mapped(Mmap, File)` / `Loaded`), `Deref`, `AsRef` |
 
 See [Architecture Documentation](docs/src/architecture.md) for details.
 

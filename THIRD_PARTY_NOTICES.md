@@ -8,10 +8,26 @@ In the event that a required notice is missing or incorrect, please notify us by
 
 ## Apache License 2.0
 
-Used by 3 crate(s):
+Used by 19 crate(s):
 
-- [mmap-guard 0.1.0](https://github.com/EvilBit-Labs/mmap-guard)
+- [windows-link 0.2.1](https://github.com/microsoft/windows-rs)
+- [windows-sys 0.59.0](https://github.com/microsoft/windows-rs)
+- [windows-sys 0.61.2](https://github.com/microsoft/windows-rs)
+- [windows-targets 0.52.6](https://github.com/microsoft/windows-rs)
+- [windows_aarch64_gnullvm 0.52.6](https://github.com/microsoft/windows-rs)
+- [windows_aarch64_msvc 0.52.6](https://github.com/microsoft/windows-rs)
+- [windows_i686_gnu 0.52.6](https://github.com/microsoft/windows-rs)
+- [windows_i686_gnullvm 0.52.6](https://github.com/microsoft/windows-rs)
+- [windows_i686_msvc 0.52.6](https://github.com/microsoft/windows-rs)
+- [windows_x86_64_gnu 0.52.6](https://github.com/microsoft/windows-rs)
+- [windows_x86_64_gnullvm 0.52.6](https://github.com/microsoft/windows-rs)
+- [windows_x86_64_msvc 0.52.6](https://github.com/microsoft/windows-rs)
 - [memmap2 0.9.10](https://github.com/RazrFalcon/memmap2-rs)
+- [bitflags 2.11.0](https://github.com/bitflags/bitflags)
+- [errno 0.3.14](https://github.com/lambda-fairy/rust-errno)
+- [fs4 0.13.1](https://github.com/al8n/fs4-rs)
+- [linux-raw-sys 0.12.1](https://github.com/sunfishcode/linux-raw-sys)
+- [rustix 1.1.4](https://github.com/bytecodealliance/rustix)
 - [libc 0.2.182](https://github.com/rust-lang/libc)
 
 ### License text
@@ -205,7 +221,7 @@ Used by 3 crate(s):
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright [yyyy] [name of copyright owner]
+   Copyright (c) Microsoft Corporation.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -220,3 +236,43 @@ Used by 3 crate(s):
    limitations under the License.
 
 ```
+
+---
+
+## MIT OR Apache-2.0
+
+Used by 1 crate(s):
+
+- [mmap-guard 0.1.0](https://github.com/EvilBit-Labs/mmap-guard)
+
+This crate is dual-licensed under MIT or Apache-2.0, at your option.
+
+### MIT License text
+
+```text
+MIT License
+
+Copyright (c) the mmap-guard contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+### Apache License 2.0 text
+
+See [Apache License 2.0](#apache-license-20) above.

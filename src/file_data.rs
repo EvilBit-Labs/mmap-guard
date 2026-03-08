@@ -1,6 +1,7 @@
 //! The [`FileData`] enum — a unified read-only view over memory-mapped and
 //! heap-allocated file data.
 
+use std::fs::File;
 use std::ops::Deref;
 
 use memmap2::Mmap;
@@ -9,6 +10,14 @@ use memmap2::Mmap;
 ///
 /// Both variants dereference to `&[u8]`, so consumers can treat the data
 /// uniformly regardless of the backing store.
+///
+/// # Compatibility
+///
+/// This enum is `#[non_exhaustive]`, so match arms must include a wildcard.
+/// The `Mapped` variant carries **two** fields — the memory map and the
+/// file handle (for advisory locking). Always pattern-match with `..`
+/// (e.g., `FileData::Mapped(..)`) rather than a fixed number of fields,
+/// so your code remains forward-compatible if additional fields are added.
 ///
 /// # Examples
 ///
@@ -23,7 +32,11 @@ use memmap2::Mmap;
 #[non_exhaustive]
 pub enum FileData {
     /// Data backed by a read-only memory map (zero-copy).
-    Mapped(Mmap),
+    ///
+    /// The [`File`] handle is retained to keep the mapping valid and to
+    /// support advisory locking for the lifetime of the map. Always match
+    /// with `Mapped(..)` for forward compatibility.
+    Mapped(Mmap, File),
     /// Data loaded into a heap-allocated buffer.
     Loaded(Vec<u8>),
 }
@@ -33,7 +46,7 @@ impl Deref for FileData {
 
     fn deref(&self) -> &[u8] {
         match self {
-            Self::Mapped(mmap) => mmap,
+            Self::Mapped(mmap, _file) => mmap,
             Self::Loaded(vec) => vec,
         }
     }

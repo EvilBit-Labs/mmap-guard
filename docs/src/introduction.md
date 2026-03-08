@@ -14,15 +14,21 @@ Beyond simply wrapping the `unsafe` call, the goal is **isolation**. By centrali
 
 1. **Safe mmap construction** — wraps `memmap2::Mmap::map()` with pre-flight checks
 2. **Platform quirk mitigation** — documents and (where possible) mitigates SIGBUS/access violations from file truncation during mapping
-3. **Unified read API** — returns `&[u8]` whether backed by mmap or a heap buffer (for stdin/non-seekable inputs)
+3. **Cooperative SIGBUS mitigation** — acquires a shared advisory lock via `fs4` before mapping, reducing the risk of concurrent truncation
+4. **Unified read API** — returns `&[u8]` whether backed by mmap or a heap buffer (for stdin/non-seekable inputs)
 
 ## What It Does NOT Do
 
 - Provide mutable/writable mappings
-- Manage file locking or concurrency
+- Expose a general file-locking or concurrency API to callers
 - Abstract over async I/O
 - Implement its own mmap syscalls (delegates entirely to `memmap2`)
 
 ## License
 
-Licensed under [Apache-2.0](https://github.com/EvilBit-Labs/mmap-guard/blob/main/LICENSE).
+Licensed under either of
+
+- [Apache License, Version 2.0](https://github.com/EvilBit-Labs/mmap-guard/blob/main/LICENSE-APACHE)
+- [MIT License](https://github.com/EvilBit-Labs/mmap-guard/blob/main/LICENSE-MIT)
+
+at your option.
