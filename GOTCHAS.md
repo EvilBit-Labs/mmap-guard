@@ -19,6 +19,7 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 - `expect_used` = **warn** -- prefer `?` over `.expect()` in library code.
 - Test modules need `#[allow(clippy::unwrap_used, clippy::expect_used)]` on the `mod tests` block.
 - Full pedantic/nursery/cargo groups are enabled -- new code may trigger unexpected warnings from lint groups you didn't explicitly enable.
+- `uninlined_format_args` is denied (via pedantic) -- use `"{var}"` not `"{}", var` in format strings.
 
 ## Rustdoc
 
