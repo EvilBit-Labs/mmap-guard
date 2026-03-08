@@ -71,7 +71,7 @@ lint: lint-rust lint-actions lint-docs lint-justfile
 
 # Individual lint recipes
 lint-actions:
-    @{{ mise_exec }} actionlint .github/workflows/audit.yml .github/workflows/ci.yml .github/workflows/docs.yml .github/workflows/scorecard.yml .github/workflows/security.yml
+    @{{ mise_exec }} actionlint .github/workflows/audit.yml .github/workflows/ci.yml .github/workflows/docs.yml .github/workflows/release-plz.yml .github/workflows/scorecard.yml .github/workflows/security.yml
 
 lint-docs:
     @{{ mise_exec }} markdownlint-cli2 docs/**/*.md README.md
@@ -244,6 +244,14 @@ docs: docs-build docs-serve
 [windows]
 docs:
     @echo "mdbook requires a Unix-like environment to serve"
+
+# =============================================================================
+# THIRD-PARTY NOTICES
+# =============================================================================
+
+# Regenerate THIRD_PARTY_NOTICES.md from current dependencies
+third-party-notices:
+    @{{ mise_exec }} cargo about generate about.hbs -o THIRD_PARTY_NOTICES.md
 
 # =============================================================================
 # CHANGELOG
