@@ -133,6 +133,7 @@ mod tests {
         );
     }
 
+    #[cfg(unix)]
     #[test]
     fn map_file_returns_would_block_when_exclusively_locked() {
         use std::process::{Command, Stdio};

@@ -276,6 +276,67 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::exit)] // subprocess helper must exit to avoid running the parent path
+    fn load_dash_routes_to_stdin() {
+        use std::fs;
+        use std::process::{Command, Stdio};
+
+        // Subprocess guard: when the env var is set, this process is the
+        // child helper. Call load("-"), write the loaded bytes to the file
+        // indicated by __MMAP_GUARD_STDIN_OUT, and exit.
+        if let Ok(out_path) = std::env::var("__MMAP_GUARD_STDIN_OUT") {
+            let result = load("-");
+            match result {
+                Ok(data) if matches!(data, FileData::Loaded(..)) => {
+                    fs::write(&out_path, &*data).unwrap();
+                    std::process::exit(0);
+                }
+                _ => std::process::exit(1),
+            }
+        }
+
+        let current_exe = std::env::current_exe().expect("failed to get current exe");
+        let payload = b"hello from stdin";
+
+        // Temp file the child will write its loaded bytes to.
+        let out_file = NamedTempFile::new().expect("failed to create output temp file");
+        let out_path = out_file.path().to_owned();
+
+        let mut child = Command::new(&current_exe)
+            .env("__MMAP_GUARD_STDIN_OUT", &out_path)
+            .arg("--exact")
+            .arg("load::tests::load_dash_routes_to_stdin")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("failed to spawn child");
+
+        // Write payload then close stdin so the child sees EOF.
+        {
+            let child_stdin = child.stdin.as_mut().expect("missing child stdin");
+            child_stdin
+                .write_all(payload)
+                .expect("failed to write to child stdin");
+        }
+        drop(child.stdin.take());
+
+        let output = child.wait_with_output().expect("failed to wait on child");
+        assert!(
+            output.status.success(),
+            "child exited with failure: {}\nstderr: {}",
+            output.status,
+            String::from_utf8_lossy(&output.stderr),
+        );
+
+        let written = fs::read(&out_path).expect("failed to read child output file");
+        assert_eq!(
+            written, payload,
+            "child output did not match expected payload"
+        );
+    }
+
+    #[test]
     fn read_bounded_produces_loaded_variant() {
         // Validate the bounded-read path that load("-") delegates to,
         // using a Cursor to avoid dependence on real process stdin.
