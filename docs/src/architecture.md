@@ -29,7 +29,7 @@ Defines the `FileData` enum — the unified type returned by all public function
 
 ### `map.rs`
 
-Contains `map_file()` and the **single `unsafe` block** in the crate. Performs pre-flight checks (file exists, non-empty) before creating the memory mapping.
+Contains `map_file()` and the **single `unsafe` block** in the crate. Acquires a shared advisory lock (via `fs4`) before mapping, which mitigates SIGBUS from concurrent truncation when cooperating processes also use advisory locks. Performs pre-flight checks (file exists, non-empty) before creating the memory mapping.
 
 ### `load.rs`
 
