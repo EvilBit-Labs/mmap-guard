@@ -23,6 +23,10 @@ docs/book/
 .history/
 .ionide
 
+# Fuzzing (machine-generated, not committed)
+fuzz/artifacts/
+fuzz/corpus/
+
 # Testing
 **/mutants.out*/
 
