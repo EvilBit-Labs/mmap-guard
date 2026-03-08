@@ -43,6 +43,17 @@
 //! This crate contains exactly **one** `unsafe` block: the call to
 //! [`memmap2::Mmap::map()`]. See the [`map_file`] documentation for the full
 //! safety argument.
+//!
+//! # Known Limitations
+//!
+//! Advisory locks acquired by this crate are **cooperative**: they are only
+//! effective when all processes accessing the same file honour the `fs4`
+//! locking protocol. A process that truncates a file without acquiring the
+//! advisory lock first may cause the OS to deliver `SIGBUS` (Unix) or an
+//! access violation (Windows) when a mapped region is read. This is inherent
+//! to memory-mapped I/O and cannot be fully eliminated.
+//!
+//! See [`map_file`]'s *Known Limitations* section for the full detail.
 
 #![deny(clippy::undocumented_unsafe_blocks)]
 

@@ -11,6 +11,12 @@ use memmap2::Mmap;
 /// Both variants dereference to `&[u8]`, so consumers can treat the data
 /// uniformly regardless of the backing store.
 ///
+/// # Errors
+///
+/// This type does not produce errors directly. Errors arise from the
+/// functions that construct it — see [`map_file`](crate::map_file),
+/// [`load`](crate::load), and [`load_stdin`](crate::load_stdin).
+///
 /// # Compatibility
 ///
 /// This enum is `#[non_exhaustive]`, so match arms must include a wildcard.
