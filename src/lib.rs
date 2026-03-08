@@ -20,19 +20,23 @@
 //! // data derefs to &[u8] — use it like any byte slice
 //! ```
 //!
-//! For CLI tools that accept both file paths and stdin:
+//! For CLI tools that accept both file paths and stdin, pass the user-supplied
+//! path straight to [`load()`] — it routes `"-"` to stdin internally:
 //!
 //! ```no_run
-//! use mmap_guard::{load, load_stdin};
-//! use std::path::Path;
+//! use mmap_guard::load;
 //!
-//! let path = Path::new("input.txt");
-//! let data = if path == Path::new("-") {
-//!     load_stdin()
-//! } else {
-//!     load(path)
-//! };
+//! // In a real CLI you'd get `path` from clap / std::env::args.
+//! let path = std::env::args().nth(1).unwrap_or_else(|| "-".to_string());
+//!
+//! // No manual `if path == "-"` branch needed — `load` handles the dispatch.
+//! let data = load(&path)?;
+//! assert!(!data.is_empty());
+//! # Ok::<(), std::io::Error>(())
 //! ```
+//!
+//! If you need a custom byte cap for stdin, call [`load_stdin`] directly
+//! (e.g. `load_stdin(Some(10 * 1024 * 1024))` for a 10 MiB limit).
 //!
 //! # Safety
 //!
