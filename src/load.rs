@@ -45,7 +45,8 @@ const CHUNK_SIZE: usize = 8 * 1024;
 /// continues until EOF with no limit.
 #[allow(clippy::indexing_slicing)] // read_size and n are always <= CHUNK_SIZE
 fn read_bounded<R: Read>(reader: &mut R, max_bytes: Option<usize>) -> io::Result<Vec<u8>> {
-    let mut buf = Vec::new();
+    let initial_capacity = max_bytes.map_or(CHUNK_SIZE, |cap| cap.min(CHUNK_SIZE));
+    let mut buf = Vec::with_capacity(initial_capacity);
     let mut chunk = [0_u8; CHUNK_SIZE];
 
     loop {
@@ -91,9 +92,17 @@ fn read_bounded<R: Read>(reader: &mut R, max_bytes: Option<usize>) -> io::Result
 ///
 /// # Errors
 ///
-/// Returns [`io::Error`] if the file cannot be opened, is empty, cannot
-/// be memory-mapped, or — when `path` is `"-"` — if stdin input exceeds
-/// 1 GiB ([`io::ErrorKind::InvalidData`]).
+/// Returns [`io::Error`] with the following kinds:
+///
+/// | Condition | `io::ErrorKind` |
+/// |---|---|
+/// | File not found | `NotFound` (OS-native) |
+/// | Permission denied | `PermissionDenied` (OS-native) |
+/// | File is empty | `InvalidInput` |
+/// | Advisory lock not immediately available | `WouldBlock` |
+/// | `mmap` syscall failure | OS-native kind |
+/// | Stdin read I/O error | OS-native kind |
+/// | Stdin input exceeds 1 GiB | `InvalidData` |
 ///
 /// # Examples
 ///
@@ -109,6 +118,7 @@ fn read_bounded<R: Read>(reader: &mut R, max_bytes: Option<usize>) -> io::Result
 /// println!("read {} bytes from stdin", stdin_data.len());
 /// # Ok::<(), std::io::Error>(())
 /// ```
+#[must_use = "the loaded FileData should be consumed; dropping it discards the data"]
 pub fn load(path: impl AsRef<Path>) -> io::Result<FileData> {
     let path = path.as_ref();
     match resolve_source(path) {
@@ -122,15 +132,23 @@ pub fn load(path: impl AsRef<Path>) -> io::Result<FileData> {
 /// Returns [`FileData::Loaded`] containing the complete contents of stdin.
 /// This is useful for CLI tools that accept piped input via `-`.
 ///
+/// When callers pass `"-"` to [`load`], it internally calls
+/// `load_stdin(Some(1_073_741_824))`. For advanced use — custom byte caps,
+/// pre-flight size checks, or explicit stdin routing — call `load_stdin`
+/// directly rather than relying on the `load("-")` shortcut.
+///
 /// `max_bytes` controls the upper bound on how much data will be read:
 /// - `None` — unlimited; reads until EOF.
 /// - `Some(n)` — hard cap at `n` bytes; returns an error if exceeded.
 ///
 /// # Errors
 ///
-/// Returns [`io::Error`] if reading from stdin fails, or if `max_bytes`
-/// is `Some(n)` and the input exceeds `n` bytes
-/// ([`io::ErrorKind::InvalidData`]).
+/// Returns [`io::Error`] with the following kinds:
+///
+/// | Condition | `io::ErrorKind` |
+/// |---|---|
+/// | Stdin read I/O failure | OS-native kind |
+/// | Input exceeds `max_bytes` | `InvalidData` |
 ///
 /// # Examples
 ///
@@ -145,6 +163,7 @@ pub fn load(path: impl AsRef<Path>) -> io::Result<FileData> {
 /// let data = load_stdin(Some(10 * 1024 * 1024))?;
 /// # Ok::<(), std::io::Error>(())
 /// ```
+#[must_use = "the loaded FileData should be consumed; dropping it discards the data"]
 pub fn load_stdin(max_bytes: Option<usize>) -> io::Result<FileData> {
     let mut stdin = io::stdin();
     let buf = read_bounded(&mut stdin, max_bytes)?;

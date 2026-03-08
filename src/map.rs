@@ -12,12 +12,7 @@
 //! - Callers receive `&[u8]` with a lifetime tied to [`FileData`], preventing
 //!   use-after-unmap.
 //!
-//! **Known limitation:** a shared advisory lock is acquired before mapping
-//! (via `fs4`), which mitigates SIGBUS from concurrent truncation when
-//! cooperating processes also use advisory locks. However, advisory locks are
-//! not mandatory — if another process truncates the file without checking the
-//! lock, the OS may still deliver SIGBUS (Unix) or an access violation
-//! (Windows). This is inherent to memory-mapped I/O.
+//! See [`map_file`] for error kinds and known limitations.
 
 use std::fs::File;
 use std::io;
@@ -35,12 +30,27 @@ use crate::FileData;
 ///
 /// # Errors
 ///
-/// Returns [`io::Error`] if:
-/// - The file cannot be opened (permissions, not found, etc.)
-/// - The file metadata cannot be read
-/// - The file is empty (length 0) — [`io::ErrorKind::InvalidInput`]
-/// - The file is exclusively locked by another process — [`io::ErrorKind::WouldBlock`]
-/// - The memory mapping fails
+/// Returns [`io::Error`] with the following kinds:
+///
+/// | Condition | `io::ErrorKind` |
+/// |---|---|
+/// | File not found | `NotFound` (OS-native) |
+/// | Permission denied | `PermissionDenied` (OS-native) |
+/// | File metadata unreadable | OS-native kind |
+/// | File is empty (zero bytes) | `InvalidInput` |
+/// | Advisory lock not immediately available | `WouldBlock` |
+/// | Lock acquisition I/O failure | OS-native kind |
+/// | `mmap` syscall failure | OS-native kind from `memmap2` |
+///
+/// # Known Limitations
+///
+/// Advisory locks acquired by this function are **cooperative** — they are
+/// only effective when all processes accessing the file honour the same
+/// locking protocol. If another process truncates the file without
+/// acquiring an advisory lock first, the OS may still deliver `SIGBUS`
+/// (Unix) or an access violation (Windows) when the memory-mapped region
+/// is read. This is an inherent limitation of memory-mapped I/O and cannot
+/// be fully prevented by this crate.
 ///
 /// # Examples
 ///
@@ -51,6 +61,7 @@ use crate::FileData;
 /// println!("file size: {} bytes", data.len());
 /// # Ok::<(), std::io::Error>(())
 /// ```
+#[must_use = "the mapped FileData must be retained to keep the advisory lock alive"]
 pub fn map_file(path: impl AsRef<Path>) -> io::Result<FileData> {
     let path = path.as_ref();
     let file = File::open(path)?;
@@ -138,6 +149,31 @@ mod tests {
             matches!(data, FileData::Mapped(..)),
             "expected Mapped variant"
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn map_file_rejects_permission_denied() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let mut tmp = NamedTempFile::new().expect("failed to create temp file");
+        tmp.write_all(b"secret").expect("failed to write");
+        tmp.flush().expect("failed to flush");
+
+        // Remove all permissions from the file.
+        let perms = std::fs::Permissions::from_mode(0o000);
+        std::fs::set_permissions(tmp.path(), perms).expect("failed to chmod");
+
+        let err = map_file(tmp.path()).unwrap_err();
+        assert_eq!(
+            err.kind(),
+            io::ErrorKind::PermissionDenied,
+            "expected PermissionDenied, got: {err}"
+        );
+
+        // Restore permissions so NamedTempFile cleanup succeeds.
+        let restore = std::fs::Permissions::from_mode(0o600);
+        std::fs::set_permissions(tmp.path(), restore).expect("failed to restore permissions");
     }
 
     #[cfg(unix)]

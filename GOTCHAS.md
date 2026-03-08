@@ -12,9 +12,12 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 
 ## Clippy Lints
 
+- `missing_const_for_fn` (nursery, promoted to deny via `-D warnings`) -- functions inside `const` blocks (e.g., compile-time `Send + Sync` assertions) must be marked `const fn`.
+- `option_if_let_else` (nursery, promoted to deny via `-D warnings`) -- prefer `Option::map_or` / `map_or_else` over `match` on `Option` for simple transformations.
 - `indexing_slicing` = **warn** (promoted to deny via `-D warnings` in CI) -- direct slice indexing (e.g., `chunk[..n]`) is rejected. Use `#[allow(clippy::indexing_slicing)]` with a justification comment when bounds are provably safe; `.get()` can cause borrow-checker issues with mutable slices.
 - `unseparated_literal_suffix` = **warn** (promoted to deny via `-D warnings` in CI) -- literal suffixes must use underscore separation (`0_u8`, not `0u8`).
 - `multiple_crate_versions` = **warn** -- `fs4` and `tempfile` pull different `windows-sys` versions. The justfile `lint-rust` / `lint-rust-min` recipes pass `-A clippy::multiple_crate_versions` after `-D warnings` to prevent over-promotion. Do not change the Cargo.toml level to `deny` or `allow`.
+- The same `windows-sys` duplication causes `cargo deny check` to fail on the `bans` policy. `deny.toml` has a `skip` entry for `windows-sys` -- keep it until `fs4` and `rustix` converge on the same version.
 - `unwrap_used` = **deny**, `panic` = **deny** -- these fail the build in library code. Use `?` or proper error handling.
 - `expect_used` = **warn** -- prefer `?` over `.expect()` in library code.
 - Test modules need `#[allow(clippy::unwrap_used, clippy::expect_used)]` on the `mod tests` block.
@@ -24,6 +27,7 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 
 ## Rustdoc
 
+- `load` is both a module name (`mod load`) and a re-exported function (`pub use load::load`). In doc comments from submodules, link with `crate::load()` (parens disambiguate to the function) -- bare `crate::load` errors as ambiguous.
 - `cargo doc --document-private-items` is used in CI. Links to private modules (e.g., `[`map`]`) will error because they resolve only with `--document-private-items` but break without it. Link to public items instead (e.g., `[`map_file`]`).
 - Redundant explicit link targets (e.g., `[`map_file`](crate::map_file)`) are denied. Let rustdoc resolve intra-doc links automatically.
 
@@ -36,6 +40,9 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 
 ## CI
 
+- `Cargo.lock` is gitignored (library crate convention). Do not commit it -- release-plz will refuse to run if `Cargo.lock` is both committed and gitignored.
+- Mergify `queue_rules` requires both `queue_conditions` and `merge_conditions`. `merge_method` belongs on `queue_rules`, not the `queue` action. Parallel checks are configured via `merge_queue.max_parallel_checks` at the top level, not inside `queue_rules`.
+- The `Cargo.toml` `exclude` list controls what ships to crates.io. Keep it comprehensive -- CI config, tooling, and non-essential docs should be excluded. Run `cargo package --list --allow-dirty` to audit.
 - cargo subcommands installed via mise (e.g., cargo-dist) must be invoked as standalone binaries (`dist plan`) not cargo subcommands (`cargo dist plan`) -- cargo can't find mise-managed subcommands.
 - `cargo-dist` plan/build does nothing for a library crate (no binary targets). That's why `dist-plan` is excluded from `just ci-check`.
 - Mergify merge protections evaluate from the **main branch** config, not the PR branch.
