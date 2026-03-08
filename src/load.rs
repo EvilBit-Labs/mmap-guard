@@ -173,7 +173,7 @@ pub fn load_stdin(max_bytes: Option<usize>) -> io::Result<FileData> {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::expect_used)]
+#[allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
 mod tests {
     use std::io::{self, Cursor, Write};
     use std::path::Path;

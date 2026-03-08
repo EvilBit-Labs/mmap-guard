@@ -1,5 +1,7 @@
 //! Property tests for `map_file` round-trip integrity.
 
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use std::io::Write;
 
 use proptest::prelude::*;
