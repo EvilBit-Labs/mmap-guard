@@ -37,7 +37,7 @@
 //! # Safety
 //!
 //! This crate contains exactly **one** `unsafe` block: the call to
-//! [`memmap2::Mmap::map()`]. See the [`map`] module documentation for the full
+//! [`memmap2::Mmap::map()`]. See the [`map_file`] documentation for the full
 //! safety argument.
 
 #![deny(clippy::undocumented_unsafe_blocks)]

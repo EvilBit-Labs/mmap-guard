@@ -8,7 +8,7 @@
 //! - The file is opened **read-only** — no mutable aliasing is possible through
 //!   this crate.
 //! - The [`std::fs::File`] handle is kept alive for the lifetime of the
-//!   [`Mmap`](memmap2::Mmap) (both are moved into [`FileData::Mapped`]).
+//!   [`Mmap`] (both are moved into [`FileData::Mapped`]).
 //! - Callers receive `&[u8]` with a lifetime tied to [`FileData`], preventing
 //!   use-after-unmap.
 //!

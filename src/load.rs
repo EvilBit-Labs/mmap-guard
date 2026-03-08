@@ -12,7 +12,7 @@ use crate::map::map_file;
 
 /// Load data from a file path, using memory mapping when possible.
 ///
-/// For regular files, this delegates to [`map_file`](crate::map_file) for
+/// For regular files, this delegates to [`map_file`] for
 /// zero-copy access. The path must point to a non-empty, readable file.
 ///
 /// # Errors
