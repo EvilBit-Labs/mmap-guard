@@ -26,4 +26,9 @@ Beyond simply wrapping the `unsafe` call, the goal is **isolation**. By centrali
 
 ## License
 
-Licensed under [Apache-2.0](https://github.com/EvilBit-Labs/mmap-guard/blob/main/LICENSE).
+Licensed under either of
+
+- [Apache License, Version 2.0](https://github.com/EvilBit-Labs/mmap-guard/blob/main/LICENSE-APACHE)
+- [MIT License](https://github.com/EvilBit-Labs/mmap-guard/blob/main/LICENSE-MIT)
+
+at your option.
