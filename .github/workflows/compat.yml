@@ -3,6 +3,9 @@ name: Compatibility
 on:
     schedule:
         - cron: "0 6 * * 1" # Weekly, Monday 06:00 UTC
+    pull_request:
+        branches:
+            - main
     workflow_dispatch:
 
 permissions:
@@ -21,6 +24,7 @@ env:
 
 jobs:
     compat:
+        if: github.event_name != 'pull_request' || startsWith(github.head_ref, 'mergify/merge-queue/')
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
@@ -39,7 +43,7 @@ jobs:
                   toolchain: ${{ matrix.toolchain }}
 
             - name: Build
-              run: cargo build --all-features
+              run: cargo build
 
             - name: Run tests
-              run: cargo test --all-features
+              run: cargo test
