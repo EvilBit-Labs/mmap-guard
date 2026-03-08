@@ -86,7 +86,7 @@ repos:
             types: [cargo, cargo-lock]
 
     - repo: https://github.com/DevinR528/cargo-sort
-      rev: v2.1.0
+      rev: v2.1.1
       hooks:
           - id: cargo-sort
             types: [cargo]
