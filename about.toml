@@ -11,3 +11,10 @@ accepted = [
     "Unlicense",
     "Zlib",
 ]
+
+# Only include what ships to consumers
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
+
+# Use built-in workarounds for crates with known license ambiguities
+workarounds = ["ring"]
