@@ -70,7 +70,46 @@ The crate is a thin library with four source files:
 - `src/map.rs` — `map_file()` with pre-flight stat check; contains the single `unsafe` block
 - `src/load.rs` — `load()` routes `"-"` to `load_stdin(Some(1 GiB))`; other paths to `map_file()`. `load_stdin(max_bytes)` reads stdin into a heap buffer with optional byte cap
 
-Runtime dependencies: `memmap2`, `fs4` (advisory file locking). Dev-dependency: `tempfile`.
+Runtime dependencies: `memmap2`, `fs4` (advisory file locking). Dev-dependencies: `tempfile`, `proptest`.
+
+## Fuzzing & Property Tests
+
+Coverage-guided fuzzing via `cargo-fuzz` (nightly) and property tests via `proptest` (stable).
+
+### Fuzz targets (`fuzz/`)
+
+The `fuzz/` directory is a separate Cargo workspace (not published). It depends on `mmap-guard` with the `__fuzz` feature to access internal functions.
+
+```bash
+# Install cargo-fuzz (one-time)
+cargo install cargo-fuzz --locked
+
+# Run a fuzz target (nightly required)
+cargo +nightly fuzz run fuzz_read_bounded -- -max_total_time=60
+cargo +nightly fuzz run fuzz_map_file -- -max_total_time=60
+
+# List available targets
+cargo +nightly fuzz list
+```
+
+Targets:
+
+- `fuzz_read_bounded` — structured input (`Arbitrary`) exercising the bounded-read logic with fuzzer-controlled data and cap
+- `fuzz_map_file` — writes fuzzer bytes to a temp file, maps it, asserts round-trip integrity
+
+### Property tests
+
+- `tests/prop_map_file.rs` — proptest integration test for `map_file` round-trip
+- `src/load.rs` `mod tests::prop` — proptest for `read_bounded` (unit test, has access to private API)
+
+### `__fuzz` feature flag
+
+The `__fuzz` feature exposes `read_bounded` (normally private) as `#[doc(hidden)] pub`. It is not part of the public API — the leading underscores signal internal-only use. Only the fuzz crate enables it.
+
+### CI workflows
+
+- `.github/workflows/fuzz.yml` — weekly nightly fuzzing, matrix over targets, uploads crash artifacts on failure
+- `.github/workflows/compat.yml` — weekly Rust version compatibility matrix (stable, stable minus 2, stable minus 5, MSRV 1.85), runs build + tests including proptests
 
 ## Lint Configuration
 
