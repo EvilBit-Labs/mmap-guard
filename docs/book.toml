@@ -1,0 +1,51 @@
+[book]
+authors     = [ "UncleSp1d3r", "KryptoKat", "mmap-guard Contributors" ]
+language    = "en"
+src         = "src"
+title       = "mmap-guard Developer Guide"
+description = "A guide to the mmap-guard library for safe, guarded memory-mapped file I/O"
+
+[output.html]
+default-theme        = "navy"
+preferred-dark-theme = "navy"
+git-repository-url   = "https://github.com/EvilBit-Labs/mmap-guard"
+edit-url-template    = "https://github.com/EvilBit-Labs/mmap-guard/edit/main/docs/{path}"
+additional-js        = ["whichlang.js"]
+additional-css       = ["whichlang.css"]
+
+[output.html.fold]
+enable = true
+level  = 1
+
+[output.html.playground]
+copyable     = true
+copy-js      = true
+line-numbers = false
+editable     = false
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+
+[preprocessor.toc]
+command  = "mdbook-toc"
+marker   = "[TOC]"
+renderer = [ "html" ]
+
+[preprocessor.tabs]
+command = "mdbook-tabs"
+
+[preprocessor.links]
+
+[output.html.search]
+enable              = true
+limit-results       = 30
+teaser-word-count   = 30
+use-boolean-and     = true
+boost-title         = 2
+boost-hierarchy     = 1
+boost-paragraph     = 1
+expand              = true
+heading-split-level = 3
+
+[output.html.print]
+enable = true

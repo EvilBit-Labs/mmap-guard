@@ -46,6 +46,7 @@
     ],
     "ignores": [
         "CHANGELOG.md",
+        "THIRD_PARTY_NOTICES.md",
         ".claude/**",
         ".venv/**",
         "**/node_modules/**",
