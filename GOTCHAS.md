@@ -40,6 +40,9 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 
 ## CI
 
+- `Cargo.lock` is gitignored (library crate convention). Do not commit it -- release-plz will refuse to run if `Cargo.lock` is both committed and gitignored.
+- Mergify `queue_rules` requires both `queue_conditions` and `merge_conditions`. `merge_method` belongs on `queue_rules`, not the `queue` action. Parallel checks are configured via `merge_queue.max_parallel_checks` at the top level, not inside `queue_rules`.
+- The `Cargo.toml` `exclude` list controls what ships to crates.io. Keep it comprehensive -- CI config, tooling, and non-essential docs should be excluded. Run `cargo package --list --allow-dirty` to audit.
 - cargo subcommands installed via mise (e.g., cargo-dist) must be invoked as standalone binaries (`dist plan`) not cargo subcommands (`cargo dist plan`) -- cargo can't find mise-managed subcommands.
 - `cargo-dist` plan/build does nothing for a library crate (no binary targets). That's why `dist-plan` is excluded from `just ci-check`.
 - Mergify merge protections evaluate from the **main branch** config, not the PR branch.
