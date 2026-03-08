@@ -49,7 +49,7 @@ fn main() -> std::io::Result<()> {
 
 [`FileData`](https://docs.rs/mmap-guard/latest/mmap_guard/enum.FileData.html) is an enum with two variants:
 
-- **`Mapped`** — zero-copy memory-mapped data
+- **`Mapped`** — zero-copy memory-mapped data; the original file descriptor is retained to hold a shared advisory lock for the lifetime of the mapping
 - **`Loaded`** — heap-allocated buffer (used for stdin/pipes)
 
 Both variants implement `Deref<Target = [u8]>` and `AsRef<[u8]>`, so you can use `FileData` anywhere a `&[u8]` is expected without caring which variant is in use.

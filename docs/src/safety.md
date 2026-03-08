@@ -7,9 +7,12 @@ This crate exists to **isolate** the single `unsafe` operation behind a hardened
 The crate contains exactly **one** `unsafe` block in `src/map.rs`:
 
 ```rust,ignore
-// SAFETY: The file is opened read-only above. The `File` handle remains
-// alive as long as the `Mmap` because both are owned by the caller via
-// the returned `FileData`. No mutable mapping is created.
+// SAFETY: The file is opened read-only — no mutable aliasing is possible.
+// A shared advisory lock is acquired before mapping to reduce (though not
+// eliminate) the SIGBUS risk from concurrent truncation. Both the `Mmap`
+// and the lock-owning `File` are moved into `FileData::Mapped`, ensuring
+// the lock and mapping live and die together. Callers receive `&[u8]` with
+// a lifetime tied to `FileData`, preventing use-after-unmap.
 let mmap = unsafe { Mmap::map(&file)? };
 ```
 
@@ -17,12 +20,13 @@ let mmap = unsafe { Mmap::map(&file)? };
 
 The safety of `memmap2::Mmap::map()` relies on these conditions, all of which mmap-guard upholds:
 
-| Invariant                   | How it's upheld                                       |
-| --------------------------- | ----------------------------------------------------- |
-| File opened read-only       | `File::open()` opens in read-only mode                |
-| File descriptor stays alive | `File` is kept alive by the caller through `FileData` |
-| No use-after-unmap          | `&[u8]` lifetime is tied to `FileData` via `Deref`    |
-| No mutable aliasing         | Only read-only mappings are created                   |
+| Invariant                   | How it's upheld                                                                                                                                |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| File opened read-only       | `File::open()` opens in read-only mode                                                                                                         |
+| File descriptor stays alive | `File` is kept alive by the caller through `FileData`                                                                                          |
+| No use-after-unmap          | `&[u8]` lifetime is tied to `FileData` via `Deref`                                                                                             |
+| No mutable aliasing         | Only read-only mappings are created                                                                                                            |
+| Advisory lock held          | `fs4::FileExt::try_lock_shared` is called before mapping; the lock-owning `File` lives inside `FileData::Mapped` for the full mapping lifetime |
 
 ## Known Limitation: SIGBUS / Access Violation
 
@@ -37,7 +41,7 @@ This is inherent to memory-mapped I/O and **cannot be fully prevented** without 
 
 For applications that need robustness against concurrent file modification:
 
-1. **Advisory locking** — use `flock()` (Unix) or `LockFileEx()` (Windows) to request a shared lock before mapping. This is advisory only — it relies on other processes cooperating.
+1. **Advisory locking** — mmap-guard acquires a cooperative shared lock via `fs4::FileExt::try_lock_shared` before creating the mapping. This is advisory only — it relies on other processes cooperating. If the lock cannot be acquired (another process holds an exclusive lock), `map_file` returns `io::ErrorKind::WouldBlock`.
 2. **Signal handling** — install a `SIGBUS` handler that can recover gracefully (complex and platform-specific).
 3. **Copy-on-read** — for small files, prefer `std::fs::read()` via the `FileData::Loaded` path.
 

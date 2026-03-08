@@ -21,6 +21,7 @@ use std::fs::File;
 use std::io;
 use std::path::Path;
 
+use fs4::fs_std::FileExt;
 use memmap2::Mmap;
 
 use crate::FileData;
@@ -35,7 +36,8 @@ use crate::FileData;
 /// Returns [`io::Error`] if:
 /// - The file cannot be opened (permissions, not found, etc.)
 /// - The file metadata cannot be read
-/// - The file is empty (length 0)
+/// - The file is empty (length 0) — [`io::ErrorKind::InvalidInput`]
+/// - The file is exclusively locked by another process — [`io::ErrorKind::WouldBlock`]
 /// - The memory mapping fails
 ///
 /// # Examples
@@ -54,17 +56,31 @@ pub fn map_file(path: impl AsRef<Path>) -> io::Result<FileData> {
 
     if metadata.len() == 0 {
         return Err(io::Error::new(
-            io::ErrorKind::InvalidData,
+            io::ErrorKind::InvalidInput,
             format!("file is empty: {}", path.display()),
         ));
     }
 
-    // SAFETY: The file is opened read-only above. The `File` handle remains
-    // alive as long as the `Mmap` because both are owned by the caller via
-    // the returned `FileData`. No mutable mapping is created.
+    match FileExt::try_lock_shared(&file) {
+        Ok(true) => {} // Lock acquired successfully.
+        Ok(false) => {
+            return Err(io::Error::new(
+                io::ErrorKind::WouldBlock,
+                "file is locked by another process",
+            ));
+        }
+        Err(e) => return Err(e),
+    }
+
+    // SAFETY: The file is opened read-only — no mutable aliasing is possible.
+    // A shared advisory lock is acquired before mapping to reduce (though not
+    // eliminate) the SIGBUS risk from concurrent truncation. Both the `Mmap`
+    // and the lock-owning `File` are moved into `FileData::Mapped`, ensuring
+    // the lock and mapping live and die together. Callers receive `&[u8]` with
+    // a lifetime tied to `FileData`, preventing use-after-unmap.
     let mmap = unsafe { Mmap::map(&file)? };
 
-    Ok(FileData::Mapped(mmap))
+    Ok(FileData::Mapped(mmap, file))
 }
 
 #[cfg(test)]
@@ -91,7 +107,7 @@ mod tests {
         let tmp = NamedTempFile::new().expect("failed to create temp file");
 
         let err = map_file(tmp.path()).unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::InvalidData);
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
         assert!(
             err.to_string().contains("empty"),
             "error should mention 'empty': {err}"
@@ -112,8 +128,55 @@ mod tests {
 
         let data = map_file(tmp.path()).expect("map_file failed");
         assert!(
-            matches!(data, FileData::Mapped(_)),
+            matches!(data, FileData::Mapped(..)),
             "expected Mapped variant"
         );
+    }
+
+    #[test]
+    fn map_file_returns_would_block_when_exclusively_locked() {
+        use std::process::{Command, Stdio};
+
+        let mut tmp = NamedTempFile::new().expect("failed to create temp file");
+        tmp.write_all(b"locked data").expect("failed to write");
+        tmp.flush().expect("failed to flush");
+
+        let path = tmp.path().to_owned();
+
+        // Spawn a child process that exclusively locks the file via
+        // flock() and blocks on stdin. A separate process is required
+        // because flock() locks are per-open-file-description, and
+        // same-process locks on different FDs do not conflict on macOS.
+        let mut child = Command::new("python3")
+            .arg("-c")
+            .arg(format!(
+                "import fcntl, os, sys; \
+                 fd = os.open('{}', os.O_RDONLY); \
+                 fcntl.flock(fd, fcntl.LOCK_EX); \
+                 sys.stdout.write('locked\\n'); sys.stdout.flush(); \
+                 sys.stdin.readline()",
+                path.display()
+            ))
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("failed to spawn lock holder");
+
+        // Wait for the child to signal that it holds the lock.
+        let stdout = child.stdout.as_mut().expect("missing stdout");
+        let mut buf = [0_u8; 7]; // "locked\n"
+        io::Read::read_exact(stdout, &mut buf).expect("child did not signal");
+
+        let err = map_file(&path).unwrap_err();
+        assert_eq!(
+            err.kind(),
+            io::ErrorKind::WouldBlock,
+            "expected WouldBlock, got: {err}"
+        );
+
+        // Drop stdin to let the child exit, then reap it.
+        drop(child.stdin.take());
+        child.wait().expect("failed to reap child");
     }
 }

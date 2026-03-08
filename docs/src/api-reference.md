@@ -8,7 +8,7 @@ Full rustdoc is available at [docs.rs/mmap-guard](https://docs.rs/mmap-guard) an
 
 ```rust,ignore
 pub enum FileData {
-    Mapped(Mmap),
+    Mapped(Mmap, File), // File retains the advisory lock
     Loaded(Vec<u8>),
 }
 ```
@@ -29,12 +29,13 @@ Opens a file, verifies it is non-empty, and creates a read-only memory mapping. 
 
 **Errors:**
 
-| Condition         | `io::ErrorKind`    |
-| ----------------- | ------------------ |
-| File not found    | `NotFound`         |
-| Permission denied | `PermissionDenied` |
-| File is empty     | `InvalidData`      |
-| Mapping fails     | (OS-specific)      |
+| Condition                               | `io::ErrorKind`    |
+| --------------------------------------- | ------------------ |
+| File not found                          | `NotFound`         |
+| Permission denied                       | `PermissionDenied` |
+| File is empty                           | `InvalidInput`     |
+| Another process holds an exclusive lock | `WouldBlock`       |
+| Mapping fails                           | (OS-specific)      |
 
 ### `load`
 

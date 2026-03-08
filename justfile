@@ -53,10 +53,10 @@ fmt-check:
     @{{ mise_exec }} cargo fmt --all --check
 
 lint-rust: fmt-check
-    @{{ mise_exec }} cargo clippy --workspace --all-targets --all-features -- -D warnings
+    @{{ mise_exec }} cargo clippy --workspace --all-targets --all-features -- -D warnings -A clippy::multiple_crate_versions
 
 lint-rust-min:
-    @{{ mise_exec }} cargo clippy --workspace --all-targets --no-default-features -- -D warnings
+    @{{ mise_exec }} cargo clippy --workspace --all-targets --no-default-features -- -D warnings -A clippy::multiple_crate_versions
 
 # Format justfile
 fmt-justfile:

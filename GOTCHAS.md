@@ -12,6 +12,7 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 
 ## Clippy Lints
 
+- `multiple_crate_versions` = **warn** -- `fs4` and `tempfile` pull different `windows-sys` versions. Do not change to `deny` or `allow`; the CI `-D warnings` flag handles promotion.
 - `unwrap_used` = **deny**, `panic` = **deny** -- these fail the build in library code. Use `?` or proper error handling.
 - `expect_used` = **warn** -- prefer `?` over `.expect()` in library code.
 - Test modules need `#[allow(clippy::unwrap_used, clippy::expect_used)]` on the `mod tests` block.
@@ -25,6 +26,7 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 ## FileData Enum
 
 - `FileData` is `#[non_exhaustive]` -- match arms must include a wildcard. Adding a variant is a non-breaking change.
+- `FileData::Mapped(Mmap, File)` carries both the memory map and the file handle (for advisory locking). Use `..` in `matches!` patterns (e.g., `matches!(data, FileData::Mapped(..))`), not `_`.
 - `FileData` must implement `Debug` (required by `unwrap_err()` in tests and generally expected for public types).
 - Both `Deref<Target=[u8]>` and `AsRef<[u8]>` are implemented -- consumers should use `&*data` or `data.as_ref()` interchangeably.
 

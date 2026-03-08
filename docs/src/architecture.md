@@ -40,8 +40,9 @@ Convenience layer. `load()` delegates to `map_file()` for regular files. `load_s
 ```mermaid
 graph LR
     A[mmap-guard] -->|runtime| B[memmap2]
+    A -->|runtime| E[fs4]
     A -->|dev| C[tempfile]
     B --> D[libc]
 ```
 
-The crate has exactly **one** runtime dependency (`memmap2`) and one dev-dependency (`tempfile`).
+The crate has two runtime dependencies (`memmap2` and `fs4`) and one dev-dependency (`tempfile`).

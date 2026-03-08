@@ -61,11 +61,11 @@ Pre-commit is configured (`.pre-commit-config.yaml`) and runs on commit:
 The crate is a thin library with four source files:
 
 - `src/lib.rs` — crate-level docs, re-exports public API
-- `src/file_data.rs` — `FileData` enum (`Mapped(Mmap)` | `Loaded(Vec<u8>)`), `Deref<Target=[u8]>`, `AsRef<[u8]>`
+- `src/file_data.rs` — `FileData` enum (`Mapped(Mmap, File)` | `Loaded(Vec<u8>)`), `Deref<Target=[u8]>`, `AsRef<[u8]>`
 - `src/map.rs` — `map_file()` with pre-flight stat check; contains the single `unsafe` block
 - `src/load.rs` — `load()` delegates to `map_file()`; `load_stdin()` reads into heap buffer
 
-The only runtime dependency should be `memmap2`. Dev-dependency: `tempfile`.
+Runtime dependencies: `memmap2`, `fs4` (advisory file locking). Dev-dependency: `tempfile`.
 
 ## Lint Configuration
 

@@ -75,7 +75,7 @@ mod tests {
         let data = load(tmp.path()).expect("load failed");
         assert_eq!(&*data, b"load test");
         assert!(
-            matches!(data, FileData::Mapped(_)),
+            matches!(data, FileData::Mapped(..)),
             "expected Mapped variant for regular file"
         );
     }
@@ -85,7 +85,7 @@ mod tests {
         let tmp = NamedTempFile::new().expect("failed to create temp file");
 
         let err = load(tmp.path()).unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::InvalidData);
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
     }
 
     #[test]
