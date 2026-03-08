@@ -23,11 +23,12 @@ proptest! {
         prop_assert_eq!(&*mapped, &data[..]);
     }
 
-    /// Empty files must be rejected with `InvalidInput`.
-    #[test]
-    fn prop_map_file_rejects_empty(_dummy in 0_u8..1) {
-        let tmp = NamedTempFile::new().expect("failed to create temp file");
-        let err = map_file(tmp.path()).expect_err("expected error for empty file");
-        prop_assert_eq!(err.kind(), std::io::ErrorKind::InvalidInput);
-    }
+}
+
+/// Empty files must be rejected with `InvalidInput`.
+#[test]
+fn map_file_rejects_empty() {
+    let tmp = NamedTempFile::new().expect("failed to create temp file");
+    let err = map_file(tmp.path()).expect_err("expected error for empty file");
+    assert_eq!(err.kind(), std::io::ErrorKind::InvalidInput);
 }
