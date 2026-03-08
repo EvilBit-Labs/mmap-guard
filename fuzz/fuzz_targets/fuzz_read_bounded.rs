@@ -25,12 +25,25 @@ fuzz_target!(|input: ReadBoundedInput| {
             if let Some(c) = cap {
                 assert!(buf.len() <= c, "buf.len() {} exceeded cap {c}", buf.len());
             }
+            // Without a cap, all data must be returned.
+            if cap.is_none() {
+                assert_eq!(
+                    buf.len(),
+                    input.data.len(),
+                    "unlimited read returned fewer bytes than available",
+                );
+            }
             // Contents must match the input prefix.
             assert_eq!(&buf[..], &input.data[..buf.len()]);
         }
         Err(e) => {
             // The only expected error is overflow (InvalidData).
             assert_eq!(e.kind(), std::io::ErrorKind::InvalidData);
+            // Overflow is impossible without a cap.
+            assert!(
+                cap.is_some(),
+                "got InvalidData with no cap — read_bounded should never overflow without a limit",
+            );
             // An overflow error should only occur when the input is genuinely
             // longer than the cap.
             if let Some(c) = cap {

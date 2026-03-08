@@ -10,7 +10,9 @@ fuzz_target!(|data: &[u8]| {
     // Write fuzzer-provided bytes to a temp file, then map it.
     let mut tmp = match NamedTempFile::new() {
         Ok(f) => f,
-        Err(_) => return, // OS resource exhaustion — skip this input
+        // If temp file creation fails, the environment is broken and
+        // the entire fuzz run is useless — panic to surface the issue.
+        Err(e) => panic!("temp dir is broken — fuzzing is impossible: {e}"),
     };
 
     if tmp.write_all(data).is_err() || tmp.flush().is_err() {
@@ -23,7 +25,9 @@ fuzz_target!(|data: &[u8]| {
             assert_eq!(&*mapped, data, "round-trip mismatch");
         }
         Err(e) => {
-            // Empty files cannot be mapped — this is the only expected error.
+            // Empty files cannot be mapped — the only error expected in this
+            // context (no lock contention on fresh temp files). Any other error
+            // indicates an environmental issue worth investigating.
             assert_eq!(
                 e.kind(),
                 std::io::ErrorKind::InvalidInput,
