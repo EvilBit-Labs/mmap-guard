@@ -47,6 +47,7 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 - `cargo-dist` plan/build does nothing for a library crate (no binary targets). That's why `dist-plan` is excluded from `just ci-check`.
 - Mergify merge protections evaluate from the **main branch** config, not the PR branch.
 - The docs workflow builds rustdoc with `--document-private-items` -- see Rustdoc section above for link pitfalls.
+- Always verify pinned action SHAs with `gh api repos/{owner}/{repo}/commits/{sha} --jq '.sha'` before using them. Do not fabricate SHAs.
 
 ## Pre-commit Hooks
 
@@ -69,6 +70,8 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 - Fuzz targets live in `fuzz/` (separate workspace, edition 2021). They require nightly and `cargo-fuzz`.
 - The `fuzz/Cargo.toml` uses `edition = "2021"` (not 2024) because `cargo-fuzz` / `libfuzzer-sys` requires nightly and edition 2021 avoids compatibility issues.
 - Property tests (`proptest`) run on stable and are part of the normal test suite. The `read_bounded` proptest is a unit test inside `src/load.rs` (not in `tests/`) because it needs access to the private function.
+- `rust-toolchain.toml` overrides `rustup default` -- CI workflows that need nightly must set `RUSTUP_TOOLCHAIN: nightly` as an env var on the run step, not just install the toolchain.
+- `read_bounded` needs `#[allow(unreachable_pub)]` and `#[allow(clippy::missing_errors_doc)]` because it's `pub` (for re-export) in a private module -- clippy flags both even though the function is `#[doc(hidden)]`.
 
 ## load / load_stdin
 
