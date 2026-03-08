@@ -57,23 +57,24 @@ println!("first byte: {:#04x}", data[0]);
 For CLI tools that accept both file paths and stdin:
 
 ```rust
-use mmap_guard::{load, load_stdin};
-use std::path::Path;
+use mmap_guard::load;
 
-let path = Path::new("input.txt");
-let data = if path == Path::new("-") {
-    load_stdin()?
-} else {
-    load(path)?
-};
+// load() handles both file paths and stdin ("-" with a 1 GiB default cap).
+let data = load("input.txt")?;
+
+// For a custom stdin byte limit, call load_stdin directly:
+// use mmap_guard::load_stdin;
+// let data = load_stdin(Some(10 * 1024 * 1024))?; // 10 MiB cap
+// let data = load_stdin(None)?;                    // unlimited
 ```
 
 ## Architecture
 
 ```mermaid
 graph TD
-    load["load()"] --> map_file
-    load_stdin["load_stdin()"] --> FileData
+    load["load(path)"] -->|path == &quot;-&quot;| load_stdin
+    load -->|other paths| map_file
+    load_stdin["load_stdin(max_bytes)"] --> FileData
     map_file["map_file()"] --> unsafe["unsafe { Mmap::map() }"]
     unsafe --> FileData["FileData<br/>Deref&lt;Target=[u8]&gt;"]
     FileData --- Mapped["Mapped(Mmap, File)"]
@@ -84,7 +85,7 @@ graph TD
 | ------------------ | ------------------------------------------------------------------- |
 | `src/lib.rs`       | Crate-level docs, re-exports public API                             |
 | `src/map.rs`       | `map_file()` with pre-flight stat check; the single `unsafe` block  |
-| `src/load.rs`      | `load()` delegates to `map_file()`; `load_stdin()` reads to heap    |
+| `src/load.rs`      | `load()` routes `"-"` to `load_stdin()`, others to `map_file()`     |
 | `src/file_data.rs` | `FileData` enum (`Mapped(Mmap, File)` / `Loaded`), `Deref`, `AsRef` |
 
 ## What It Does NOT Do
