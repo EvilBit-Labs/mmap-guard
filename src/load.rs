@@ -45,7 +45,8 @@ const CHUNK_SIZE: usize = 8 * 1024;
 /// continues until EOF with no limit.
 #[allow(clippy::indexing_slicing)] // read_size and n are always <= CHUNK_SIZE
 fn read_bounded<R: Read>(reader: &mut R, max_bytes: Option<usize>) -> io::Result<Vec<u8>> {
-    let mut buf = Vec::new();
+    let initial_capacity = max_bytes.map_or(CHUNK_SIZE, |cap| cap.min(CHUNK_SIZE));
+    let mut buf = Vec::with_capacity(initial_capacity);
     let mut chunk = [0_u8; CHUNK_SIZE];
 
     loop {
@@ -117,6 +118,7 @@ fn read_bounded<R: Read>(reader: &mut R, max_bytes: Option<usize>) -> io::Result
 /// println!("read {} bytes from stdin", stdin_data.len());
 /// # Ok::<(), std::io::Error>(())
 /// ```
+#[must_use = "the loaded FileData should be consumed; dropping it discards the data"]
 pub fn load(path: impl AsRef<Path>) -> io::Result<FileData> {
     let path = path.as_ref();
     match resolve_source(path) {
@@ -161,6 +163,7 @@ pub fn load(path: impl AsRef<Path>) -> io::Result<FileData> {
 /// let data = load_stdin(Some(10 * 1024 * 1024))?;
 /// # Ok::<(), std::io::Error>(())
 /// ```
+#[must_use = "the loaded FileData should be consumed; dropping it discards the data"]
 pub fn load_stdin(max_bytes: Option<usize>) -> io::Result<FileData> {
     let mut stdin = io::stdin();
     let buf = read_bounded(&mut stdin, max_bytes)?;
