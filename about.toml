@@ -1,8 +1,13 @@
+# Keep in sync with deny.toml [licenses] allow list
 accepted = [
     "Apache-2.0",
-    "MIT",
+    "Apache-2.0 WITH LLVM-exception",
     "BSD-2-Clause",
     "BSD-3-Clause",
+    "CC0-1.0",
     "ISC",
+    "MIT",
     "Unicode-3.0",
+    "Unlicense",
+    "Zlib",
 ]
