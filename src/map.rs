@@ -61,6 +61,7 @@ use crate::FileData;
 /// println!("file size: {} bytes", data.len());
 /// # Ok::<(), std::io::Error>(())
 /// ```
+#[must_use = "the mapped FileData must be retained to keep the advisory lock alive"]
 pub fn map_file(path: impl AsRef<Path>) -> io::Result<FileData> {
     let path = path.as_ref();
     let file = File::open(path)?;
@@ -148,6 +149,31 @@ mod tests {
             matches!(data, FileData::Mapped(..)),
             "expected Mapped variant"
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn map_file_rejects_permission_denied() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let mut tmp = NamedTempFile::new().expect("failed to create temp file");
+        tmp.write_all(b"secret").expect("failed to write");
+        tmp.flush().expect("failed to flush");
+
+        // Remove all permissions from the file.
+        let perms = std::fs::Permissions::from_mode(0o000);
+        std::fs::set_permissions(tmp.path(), perms).expect("failed to chmod");
+
+        let err = map_file(tmp.path()).unwrap_err();
+        assert_eq!(
+            err.kind(),
+            io::ErrorKind::PermissionDenied,
+            "expected PermissionDenied, got: {err}"
+        );
+
+        // Restore permissions so NamedTempFile cleanup succeeds.
+        let restore = std::fs::Permissions::from_mode(0o600);
+        std::fs::set_permissions(tmp.path(), restore).expect("failed to restore permissions");
     }
 
     #[cfg(unix)]
