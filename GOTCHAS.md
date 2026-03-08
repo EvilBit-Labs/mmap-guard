@@ -12,6 +12,8 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 
 ## Clippy Lints
 
+- `missing_const_for_fn` (nursery, promoted to deny via `-D warnings`) -- functions inside `const` blocks (e.g., compile-time `Send + Sync` assertions) must be marked `const fn`.
+- `option_if_let_else` (nursery, promoted to deny via `-D warnings`) -- prefer `Option::map_or` / `map_or_else` over `match` on `Option` for simple transformations.
 - `indexing_slicing` = **warn** (promoted to deny via `-D warnings` in CI) -- direct slice indexing (e.g., `chunk[..n]`) is rejected. Use `#[allow(clippy::indexing_slicing)]` with a justification comment when bounds are provably safe; `.get()` can cause borrow-checker issues with mutable slices.
 - `unseparated_literal_suffix` = **warn** (promoted to deny via `-D warnings` in CI) -- literal suffixes must use underscore separation (`0_u8`, not `0u8`).
 - `multiple_crate_versions` = **warn** -- `fs4` and `tempfile` pull different `windows-sys` versions. The justfile `lint-rust` / `lint-rust-min` recipes pass `-A clippy::multiple_crate_versions` after `-D warnings` to prevent over-promotion. Do not change the Cargo.toml level to `deny` or `allow`.
@@ -25,6 +27,7 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 
 ## Rustdoc
 
+- `load` is both a module name (`mod load`) and a re-exported function (`pub use load::load`). In doc comments from submodules, link with `crate::load()` (parens disambiguate to the function) -- bare `crate::load` errors as ambiguous.
 - `cargo doc --document-private-items` is used in CI. Links to private modules (e.g., `[`map`]`) will error because they resolve only with `--document-private-items` but break without it. Link to public items instead (e.g., `[`map_file`]`).
 - Redundant explicit link targets (e.g., `[`map_file`](crate::map_file)`) are denied. Let rustdoc resolve intra-doc links automatically.
 

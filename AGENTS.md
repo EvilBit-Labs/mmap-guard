@@ -58,6 +58,9 @@ Pre-commit is configured (`.pre-commit-config.yaml`) and runs on commit:
 
 ## Architecture
 
+- `FileData` has a compile-time `Send + Sync` assertion (const block in `file_data.rs`) -- do not remove it; it guards against regressions if variant types change.
+- All public functions (`map_file`, `load`, `load_stdin`) carry `#[must_use]` -- maintain this for any new public API.
+
 The crate is a thin library with four source files:
 
 - `src/lib.rs` — crate-level docs, re-exports public API
