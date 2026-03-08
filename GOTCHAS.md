@@ -47,3 +47,4 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 
 - Empty files cannot be memory-mapped -- `map_file()` returns an error for zero-length files. This is a deliberate pre-flight check.
 - SIGBUS from concurrent file truncation is a **known, documented limitation** -- it cannot be fully prevented without advisory file locking. It is explicitly out of scope for security reports (see SECURITY.md).
+- `map_file()` acquires a shared advisory lock via `fs4::fs_std::FileExt::try_lock_shared()` before mapping. Lock contention returns `WouldBlock`. The lock is held by the `File` inside `FileData::Mapped` and released on drop.
