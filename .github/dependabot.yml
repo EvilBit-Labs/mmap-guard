@@ -1,0 +1,25 @@
+version: 2
+updates:
+    - package-ecosystem: "cargo"
+      directory: "/"
+      schedule:
+          interval: "weekly"
+      rebase-strategy: "disabled"
+      commit-message:
+          prefix: "chore(deps)"
+
+    - package-ecosystem: "github-actions"
+      directory: "/"
+      schedule:
+          interval: "weekly"
+      rebase-strategy: "disabled"
+      commit-message:
+          prefix: "chore(deps)"
+
+    - package-ecosystem: "devcontainers"
+      directory: "/"
+      schedule:
+          interval: "weekly"
+      rebase-strategy: "disabled"
+      commit-message:
+          prefix: "chore(deps)"
