@@ -15,6 +15,7 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 - `indexing_slicing` = **warn** (promoted to deny via `-D warnings` in CI) -- direct slice indexing (e.g., `chunk[..n]`) is rejected. Use `#[allow(clippy::indexing_slicing)]` with a justification comment when bounds are provably safe; `.get()` can cause borrow-checker issues with mutable slices.
 - `unseparated_literal_suffix` = **warn** (promoted to deny via `-D warnings` in CI) -- literal suffixes must use underscore separation (`0_u8`, not `0u8`).
 - `multiple_crate_versions` = **warn** -- `fs4` and `tempfile` pull different `windows-sys` versions. The justfile `lint-rust` / `lint-rust-min` recipes pass `-A clippy::multiple_crate_versions` after `-D warnings` to prevent over-promotion. Do not change the Cargo.toml level to `deny` or `allow`.
+- The same `windows-sys` duplication causes `cargo deny check` to fail on the `bans` policy. `deny.toml` has a `skip` entry for `windows-sys` -- keep it until `fs4` and `rustix` converge on the same version.
 - `unwrap_used` = **deny**, `panic` = **deny** -- these fail the build in library code. Use `?` or proper error handling.
 - `expect_used` = **warn** -- prefer `?` over `.expect()` in library code.
 - Test modules need `#[allow(clippy::unwrap_used, clippy::expect_used)]` on the `mod tests` block.
