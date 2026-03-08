@@ -41,7 +41,9 @@ deny = [
     "libssh2-sys",
     { crate = "cmake", use-instead = "cc" },
 ]
-skip = [  ]
+skip = [
+    { crate = "windows-sys", reason = "fs4 and rustix pull different versions" },
+]
 skip-tree = [  ]
 
 [advisories]

@@ -46,6 +46,10 @@ backend = "aqua:mitsuhiko/insta"
 "platforms.macos-x64" = { checksum = "sha256:d55ff42a08ad0fc6deed64bb9ab700c069da9c6da40947d9b658cc33fda3dcda", url = "https://github.com/mitsuhiko/insta/releases/download/1.46.3/cargo-insta-x86_64-apple-darwin.tar.xz"}
 "platforms.windows-x64" = { checksum = "sha256:fa0cd6810e393392cf347decacd8a710de9ac95b6747a753f037c46b649209aa", url = "https://github.com/mitsuhiko/insta/releases/download/1.46.3/cargo-insta-x86_64-pc-windows-msvc.zip"}
 
+[[tools."cargo:cargo-about"]]
+version = "0.8.4"
+backend = "cargo:cargo-about"
+
 [[tools."cargo:cargo-audit"]]
 version = "0.22.1"
 backend = "cargo:cargo-audit"

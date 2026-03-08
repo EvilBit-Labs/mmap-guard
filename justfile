@@ -53,10 +53,10 @@ fmt-check:
     @{{ mise_exec }} cargo fmt --all --check
 
 lint-rust: fmt-check
-    @{{ mise_exec }} cargo clippy --workspace --all-targets --all-features -- -D warnings
+    @{{ mise_exec }} cargo clippy --workspace --all-targets --all-features -- -D warnings -A clippy::multiple_crate_versions
 
 lint-rust-min:
-    @{{ mise_exec }} cargo clippy --workspace --all-targets --no-default-features -- -D warnings
+    @{{ mise_exec }} cargo clippy --workspace --all-targets --no-default-features -- -D warnings -A clippy::multiple_crate_versions
 
 # Format justfile
 fmt-justfile:
@@ -71,7 +71,7 @@ lint: lint-rust lint-actions lint-docs lint-justfile
 
 # Individual lint recipes
 lint-actions:
-    @{{ mise_exec }} actionlint .github/workflows/audit.yml .github/workflows/ci.yml .github/workflows/scorecard.yml .github/workflows/security.yml
+    @{{ mise_exec }} actionlint .github/workflows/audit.yml .github/workflows/ci.yml .github/workflows/docs.yml .github/workflows/release-plz.yml .github/workflows/scorecard.yml .github/workflows/security.yml
 
 lint-docs:
     @{{ mise_exec }} markdownlint-cli2 docs/**/*.md README.md
@@ -182,7 +182,7 @@ coverage-summary:
     $env:RUSTFLAGS = "--cfg coverage"; {{ mise_exec }} cargo llvm-cov --workspace
 
 # Full local CI parity check (dist-plan excluded — library crate has no binary targets)
-ci-check: pre-commit-run fmt-check lint-rust lint-rust-min test-ci build-release audit coverage-check
+ci-check: pre-commit-run fmt-check lint-rust lint-rust-min test-ci build-release audit coverage-check docs-check
 
 # =============================================================================
 # DISTRIBUTION AND PACKAGING
@@ -231,11 +231,11 @@ docs-serve:
 docs-clean:
     rm -rf docs/book target/doc
 
-# Check documentation (build + link validation + formatting)
+# Check documentation (rustdoc link validation + mdBook build)
 [unix]
 docs-check:
+    @{{ mise_exec }} cargo doc --no-deps --document-private-items
     cd docs && {{ mise_exec }} mdbook build
-    @just fmt-check
 
 # Generate and serve documentation
 [unix]
@@ -244,6 +244,14 @@ docs: docs-build docs-serve
 [windows]
 docs:
     @echo "mdbook requires a Unix-like environment to serve"
+
+# =============================================================================
+# THIRD-PARTY NOTICES
+# =============================================================================
+
+# Regenerate THIRD_PARTY_NOTICES.md from current dependencies
+third-party-notices:
+    @{{ mise_exec }} cargo about generate about.hbs -o THIRD_PARTY_NOTICES.md
 
 # =============================================================================
 # CHANGELOG
