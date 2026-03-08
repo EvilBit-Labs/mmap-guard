@@ -125,7 +125,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
-Licensed under the Apache License 2.0 — see [LICENSE](LICENSE) for details.
+Licensed under either of [Apache License 2.0](LICENSE-APACHE) or [MIT License](LICENSE-MIT), at your option.
 
 ## Acknowledgments
 
@@ -147,7 +147,7 @@ Licensed under the Apache License 2.0 — see [LICENSE](LICENSE) for details.
 [issues-link]: https://github.com/EvilBit-Labs/mmap-guard/issues
 [last-commit-badge]: https://img.shields.io/github/last-commit/EvilBit-Labs/mmap-guard?style=flat-square&logo=github
 [license-badge]: https://img.shields.io/github/license/EvilBit-Labs/mmap-guard?style=flat-square&logo=github
-[license-link]: https://github.com/EvilBit-Labs/mmap-guard/blob/main/LICENSE
+[license-link]: https://github.com/EvilBit-Labs/mmap-guard/blob/main/LICENSE-APACHE
 [msrv-badge]: https://img.shields.io/crates/msrv/mmap-guard?style=flat-square&logo=rust
 [scorecard-badge]: https://api.scorecard.dev/projects/github.com/EvilBit-Labs/mmap-guard/badge?style=flat-square
 [scorecard-link]: https://scorecard.dev/viewer/?uri=github.com/EvilBit-Labs/mmap-guard

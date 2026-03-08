@@ -339,10 +339,6 @@ mod tests {
         let buf = read_bounded(&mut cursor, Some(DEFAULT_STDIN_MAX_BYTES)).unwrap();
         let data = FileData::Loaded(buf);
 
-        assert!(
-            matches!(data, FileData::Loaded(..)),
-            "expected Loaded variant, got {data:?}"
-        );
         assert_eq!(&*data, input);
     }
 }

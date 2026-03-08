@@ -20,6 +20,7 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 - Test modules need `#[allow(clippy::unwrap_used, clippy::expect_used)]` on the `mod tests` block.
 - Full pedantic/nursery/cargo groups are enabled -- new code may trigger unexpected warnings from lint groups you didn't explicitly enable.
 - `uninlined_format_args` is denied (via pedantic) -- use `"{var}"` not `"{}", var` in format strings.
+- `exit` = **deny** (via nursery) -- `std::process::exit()` in subprocess helper tests needs `#[allow(clippy::exit)]` on the test function.
 
 ## Rustdoc
 
@@ -60,3 +61,4 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 - `load_stdin(max_bytes)` takes `Option<usize>` -- `None` = unlimited, `Some(n)` = hard cap returning `InvalidData` on overflow.
 - The bounded read uses a 1-byte probe at the cap boundary to distinguish exact-fit EOF from genuine overflow.
 - Do not call `load("-")` in unit tests — it reads real process stdin, which may block or behave inconsistently across test runners. Use `read_bounded` with a `Cursor` to test the stdin data path, and `resolve_source` to test the routing logic.
+- To integration-test `load("-")`, spawn the test binary as a subprocess with piped stdin and an env-var guard. The test harness writes its own output to stdout, so use a temp file (not stdout) for child-to-parent data transfer.

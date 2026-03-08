@@ -150,14 +150,14 @@ mod tests {
         // same-process locks on different FDs do not conflict on macOS.
         let mut child = Command::new("python3")
             .arg("-c")
-            .arg(format!(
+            .arg(
                 "import fcntl, os, sys; \
-                 fd = os.open('{}', os.O_RDONLY); \
+                 fd = os.open(sys.argv[1], os.O_RDONLY); \
                  fcntl.flock(fd, fcntl.LOCK_EX); \
                  sys.stdout.write('locked\\n'); sys.stdout.flush(); \
                  sys.stdin.readline()",
-                path.display()
-            ))
+            )
+            .arg(&path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
