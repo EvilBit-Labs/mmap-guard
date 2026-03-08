@@ -15,7 +15,7 @@ use memmap2::Mmap;
 ///
 /// This type does not produce errors directly. Errors arise from the
 /// functions that construct it — see [`map_file`](crate::map_file),
-/// [`load`](crate::load), and [`load_stdin`](crate::load_stdin).
+/// [`load()`](crate::load()), and [`load_stdin`](crate::load_stdin).
 ///
 /// # Compatibility
 ///
@@ -63,6 +63,16 @@ impl AsRef<[u8]> for FileData {
         self
     }
 }
+
+// Compile-time assertions: FileData must be Send + Sync so it can be shared
+// across threads (Mmap and File are both Send + Sync).
+const _: () = {
+    const fn assert_send_sync<T: Send + Sync>() {}
+    #[allow(dead_code)]
+    const fn check() {
+        assert_send_sync::<FileData>();
+    }
+};
 
 #[cfg(test)]
 mod tests {
