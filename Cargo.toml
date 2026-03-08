@@ -107,7 +107,7 @@ similar_names            = "warn"
 too_many_lines           = "warn"
 
 [dependencies]
-fs4 = "0.13.1"
+fs4     = "0.13.1"
 memmap2 = "0.9.10"
 
 [dev-dependencies]
@@ -116,6 +116,8 @@ tempfile = "3.26.0"
 [lints]
 workspace = true
 
+# NOTE: These profiles only apply when mmap-guard is the root package
+# (e.g., running tests in release mode). Downstream consumers use their own profiles.
 [profile.release]
 lto           = "thin"
 codegen-units = 1
