@@ -19,13 +19,6 @@ use memmap2::Mmap;
 /// (e.g., `FileData::Mapped(..)`) rather than a fixed number of fields,
 /// so your code remains forward-compatible if additional fields are added.
 ///
-/// # Migration from 0.1.x
-///
-/// In 0.1.x, `Mapped` held a single field (`Mapped(Mmap)`). Starting with
-/// 0.2.0, a [`File`] handle is included to support advisory locking. Update
-/// pattern matches from `FileData::Mapped(mmap)` to
-/// `FileData::Mapped(mmap, _file)` or `FileData::Mapped(..)`.
-///
 /// # Examples
 ///
 /// ```no_run

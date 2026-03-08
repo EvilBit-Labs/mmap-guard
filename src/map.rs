@@ -66,10 +66,15 @@ pub fn map_file(path: impl AsRef<Path>) -> io::Result<FileData> {
         Ok(false) => {
             return Err(io::Error::new(
                 io::ErrorKind::WouldBlock,
-                "file is locked by another process",
+                format!("file is locked by another process: {}", path.display()),
             ));
         }
-        Err(e) => return Err(e),
+        Err(e) => {
+            return Err(io::Error::new(
+                e.kind(),
+                format!("failed to acquire shared lock on {}: {e}", path.display()),
+            ));
+        }
     }
 
     // SAFETY: The file is opened read-only — no mutable aliasing is possible.
@@ -174,6 +179,10 @@ mod tests {
             err.kind(),
             io::ErrorKind::WouldBlock,
             "expected WouldBlock, got: {err}"
+        );
+        assert!(
+            err.to_string().contains(&path.display().to_string()),
+            "error should mention the file path: {err}"
         );
 
         // Drop stdin to let the child exit, then reap it.

@@ -61,7 +61,7 @@ fn read_bounded<R: Read>(reader: &mut R, max_bytes: Option<usize>) -> io::Result
                     } else {
                         Err(io::Error::new(
                             io::ErrorKind::InvalidData,
-                            format!("stdin input exceeded {cap} bytes"),
+                            format!("input exceeded {cap} bytes"),
                         ))
                     };
                 }
@@ -284,7 +284,14 @@ mod tests {
                     fs::write(&out_path, &*data).unwrap();
                     std::process::exit(0);
                 }
-                _ => std::process::exit(1),
+                Ok(data) => {
+                    eprintln!("expected Loaded variant, got: {data:?}");
+                    std::process::exit(1);
+                }
+                Err(e) => {
+                    eprintln!("load(\"-\") failed: {e}");
+                    std::process::exit(1);
+                }
             }
         }
 
@@ -327,6 +334,30 @@ mod tests {
             written, payload,
             "child output did not match expected payload"
         );
+    }
+
+    #[test]
+    fn read_bounded_zero_cap_empty_input_succeeds() {
+        let mut cursor = Cursor::new(b"".as_slice());
+        let result = read_bounded(&mut cursor, Some(0)).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn read_bounded_zero_cap_nonempty_input_fails() {
+        let mut cursor = Cursor::new(b"data".as_slice());
+        let err = read_bounded(&mut cursor, Some(0)).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidData);
+    }
+
+    #[test]
+    fn read_bounded_multi_chunk_with_cap() {
+        // Input spans multiple CHUNK_SIZE (8 KiB) chunks under a cap.
+        let input = vec![0xAA_u8; 3 * CHUNK_SIZE + 100];
+        let mut cursor = Cursor::new(input.as_slice());
+
+        let result = read_bounded(&mut cursor, Some(input.len() + 1024)).unwrap();
+        assert_eq!(result.len(), input.len());
     }
 
     #[test]
