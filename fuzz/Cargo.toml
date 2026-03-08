@@ -1,0 +1,30 @@
+[package]
+name = "mmap-guard-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = { version = "0.4", features = ["arbitrary-derive"] }
+tempfile = "3"
+
+[dependencies.mmap-guard]
+path = ".."
+features = ["__fuzz"]
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "fuzz_read_bounded"
+path = "fuzz_targets/fuzz_read_bounded.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_map_file"
+path = "fuzz_targets/fuzz_map_file.rs"
+doc = false
