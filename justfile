@@ -182,7 +182,7 @@ coverage-summary:
     $env:RUSTFLAGS = "--cfg coverage"; {{ mise_exec }} cargo llvm-cov --workspace
 
 # Full local CI parity check (dist-plan excluded — library crate has no binary targets)
-ci-check: pre-commit-run fmt-check lint-rust lint-rust-min test-ci build-release audit coverage-check
+ci-check: pre-commit-run fmt-check lint-rust lint-rust-min test-ci build-release audit coverage-check docs-check
 
 # =============================================================================
 # DISTRIBUTION AND PACKAGING
@@ -231,11 +231,11 @@ docs-serve:
 docs-clean:
     rm -rf docs/book target/doc
 
-# Check documentation (build + link validation + formatting)
+# Check documentation (rustdoc link validation + mdBook build)
 [unix]
 docs-check:
+    @{{ mise_exec }} cargo doc --no-deps --document-private-items
     cd docs && {{ mise_exec }} mdbook build
-    @just fmt-check
 
 # Generate and serve documentation
 [unix]
