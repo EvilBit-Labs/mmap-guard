@@ -33,9 +33,9 @@ use memmap2::Mmap;
 pub enum FileData {
     /// Data backed by a read-only memory map (zero-copy).
     ///
-    /// The [`File`] handle is retained to keep the mapping valid and to
-    /// support advisory locking for the lifetime of the map. Always match
-    /// with `Mapped(..)` for forward compatibility.
+    /// The [`File`] handle is retained to hold the advisory lock for the
+    /// lifetime of the map. Always match with `Mapped(..)` for forward
+    /// compatibility.
     Mapped(Mmap, File),
     /// Data loaded into a heap-allocated buffer.
     Loaded(Vec<u8>),
