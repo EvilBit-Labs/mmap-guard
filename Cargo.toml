@@ -14,15 +14,7 @@ keywords = ["mmap", "memmap", "memory-map", "file", "io"]
 categories = ["filesystem", "memory-management"]
 rust-version = "1.89"
 readme = "README.md"
-exclude = [
-    "/docs",
-    "/.vscode",
-    "/.github",
-    "/.git",
-    "/.env.*",
-    "*.orig",
-    "AGENTS.md",
-]
+exclude = ["/docs", "/.vscode", "/.github", "/.git", "/.env.*", "*.orig", "AGENTS.md"]
 
 # Workspace lint configuration
 [workspace.lints.rust]
