@@ -90,3 +90,13 @@ repos:
       hooks:
           - id: cargo-sort
             types: [cargo]
+
+    # Ensure mise.lock stays in sync with mise.toml
+    - repo: local
+      hooks:
+          - id: mise-lock-check
+            name: mise-lock-check
+            entry: bash -c 'mise lock && git diff --exit-code mise.lock || { echo "mise.lock is out of date — stage the updated mise.lock"; exit 1; }'
+            language: system
+            pass_filenames: false
+            files: ^mise\.toml$
