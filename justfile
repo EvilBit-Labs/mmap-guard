@@ -181,8 +181,8 @@ coverage-summary:
 coverage-summary:
     $env:RUSTFLAGS = "--cfg coverage"; {{ mise_exec }} cargo llvm-cov --workspace
 
-# Full local CI parity check
-ci-check: pre-commit-run fmt-check lint-rust lint-rust-min test-ci build-release audit coverage-check dist-plan
+# Full local CI parity check (dist-plan excluded — library crate has no binary targets)
+ci-check: pre-commit-run fmt-check lint-rust lint-rust-min test-ci build-release audit coverage-check
 
 # =============================================================================
 # DISTRIBUTION AND PACKAGING
