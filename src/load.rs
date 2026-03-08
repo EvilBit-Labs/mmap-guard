@@ -43,7 +43,7 @@ const CHUNK_SIZE: usize = 8 * 1024;
 /// When `max_bytes` is `Some(n)`, the function returns an [`io::ErrorKind::InvalidData`]
 /// error as soon as the accumulated length would exceed `n`. When `None`, reading
 /// continues until EOF with no limit.
-#[allow(clippy::indexing_slicing)] // read_size and n are always <= CHUNK_SIZE
+#[allow(clippy::indexing_slicing)] // read_size <= CHUNK_SIZE by construction; n <= read_size by Read::read() contract
 #[allow(unreachable_pub)] // pub visibility used by __fuzz re-export; module is private
 #[allow(clippy::missing_errors_doc)] // internal API, only pub for __fuzz re-export
 pub fn read_bounded<R: Read>(reader: &mut R, max_bytes: Option<usize>) -> io::Result<Vec<u8>> {
@@ -416,11 +416,21 @@ mod tests {
                     Ok(buf) => {
                         if let Some(c) = cap_usize {
                             prop_assert!(buf.len() <= c, "buf.len() {} > cap {c}", buf.len());
+                        } else {
+                            prop_assert_eq!(
+                                buf.len(),
+                                data.len(),
+                                "unlimited read returned fewer bytes than available",
+                            );
                         }
                         prop_assert_eq!(&buf[..], &data[..buf.len()]);
                     }
                     Err(e) => {
                         prop_assert_eq!(e.kind(), io::ErrorKind::InvalidData);
+                        prop_assert!(
+                            cap_usize.is_some(),
+                            "got InvalidData with no cap — should be impossible",
+                        );
                         if let Some(c) = cap_usize {
                             prop_assert!(
                                 data.len() > c,
