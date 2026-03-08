@@ -108,8 +108,9 @@ The `__fuzz` feature exposes `read_bounded` (normally private) as `#[doc(hidden)
 
 ### CI workflows
 
-- `.github/workflows/fuzz.yml` — weekly nightly fuzzing, matrix over targets, uploads crash artifacts on failure
-- `.github/workflows/compat.yml` — weekly Rust version compatibility matrix (stable, stable minus 2, stable minus 5, MSRV 1.85), runs build + tests including proptests
+- `.github/workflows/fuzz.yml` — weekly nightly fuzzing + merge queue gate, matrix over targets, uploads crash artifacts on failure
+- `.github/workflows/compat.yml` — weekly Rust version compatibility matrix (stable, stable minus 2, stable minus 5, MSRV 1.85) + merge queue gate, runs build + tests with default features
+- Both fuzz and compat workflows use the two-step CI pattern: they trigger on `pull_request` but skip on regular PRs via `if: startsWith(github.head_ref, 'mergify/merge-queue/')`. Mergify's `merge_conditions` use `check-success-or-neutral` so skipped jobs pass on regular PRs but block merge if they fail in the queue.
 
 ## Lint Configuration
 
