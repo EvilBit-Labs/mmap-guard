@@ -44,7 +44,9 @@ const CHUNK_SIZE: usize = 8 * 1024;
 /// error as soon as the accumulated length would exceed `n`. When `None`, reading
 /// continues until EOF with no limit.
 #[allow(clippy::indexing_slicing)] // read_size and n are always <= CHUNK_SIZE
-fn read_bounded<R: Read>(reader: &mut R, max_bytes: Option<usize>) -> io::Result<Vec<u8>> {
+#[allow(unreachable_pub)] // pub visibility used by __fuzz re-export; module is private
+#[allow(clippy::missing_errors_doc)] // internal API, only pub for __fuzz re-export
+pub fn read_bounded<R: Read>(reader: &mut R, max_bytes: Option<usize>) -> io::Result<Vec<u8>> {
     let initial_capacity = max_bytes.map_or(CHUNK_SIZE, |cap| cap.min(CHUNK_SIZE));
     let mut buf = Vec::with_capacity(initial_capacity);
     let mut chunk = [0_u8; CHUNK_SIZE];
@@ -385,5 +387,50 @@ mod tests {
         let data = FileData::Loaded(buf);
 
         assert_eq!(&*data, input);
+    }
+
+    // --- proptest property tests ---
+
+    mod prop {
+        use std::io::Cursor;
+
+        use proptest::prelude::*;
+
+        use super::*;
+
+        proptest! {
+            #![proptest_config(ProptestConfig::with_cases(512))]
+
+            /// For any (data, cap) pair, `read_bounded` must either:
+            ///  - return `Ok(buf)` where `buf.len() <= cap` and contents match, or
+            ///  - return `Err(InvalidData)` when `data.len() > cap`.
+            #[test]
+            fn prop_read_bounded(
+                data in proptest::collection::vec(any::<u8>(), 0..65_536),
+                cap in proptest::option::of(0_u16..=u16::MAX),
+            ) {
+                let cap_usize = cap.map(usize::from);
+                let mut cursor = Cursor::new(&data);
+
+                match read_bounded(&mut cursor, cap_usize) {
+                    Ok(buf) => {
+                        if let Some(c) = cap_usize {
+                            prop_assert!(buf.len() <= c, "buf.len() {} > cap {c}", buf.len());
+                        }
+                        prop_assert_eq!(&buf[..], &data[..buf.len()]);
+                    }
+                    Err(e) => {
+                        prop_assert_eq!(e.kind(), io::ErrorKind::InvalidData);
+                        if let Some(c) = cap_usize {
+                            prop_assert!(
+                                data.len() > c,
+                                "got InvalidData but data.len() {} <= cap {c}",
+                                data.len(),
+                            );
+                        }
+                    }
+                }
+            }
+        }
     }
 }
