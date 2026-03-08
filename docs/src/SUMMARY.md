@@ -16,6 +16,7 @@
 
 - [Architecture Overview](./architecture.md)
 - [Safety Contract](./safety.md)
+- [Security Assurance](./security-assurance.md)
 
 ---
 

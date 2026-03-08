@@ -33,7 +33,7 @@ Contains `map_file()` and the **single `unsafe` block** in the crate. Performs p
 
 ### `load.rs`
 
-Convenience layer. `load()` delegates to `map_file()` for regular files. `load_stdin()` reads stdin into a heap buffer and returns `FileData::Loaded`.
+Convenience layer. `load()` routes `"-"` to `load_stdin(Some(1 GiB))` for stdin, and delegates all other paths to `map_file()`. `load_stdin(max_bytes)` reads stdin in bounded chunks into a heap buffer and returns `FileData::Loaded`; passing `None` removes the cap.
 
 ## Dependency Graph
 
