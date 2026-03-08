@@ -1,0 +1,126 @@
+[package]
+name = "mmap-guard"
+version = "0.1.0"
+edition = "2024"
+authors = [
+    "UncleSp1d3r <unclespid3r@evilbitlabs.io>",
+    "KryptoKat <kryptokat@evilbitlabs.io>",
+]
+description = "Safe, guarded memory-mapped file I/O for Rust"
+license = "Apache-2.0"
+repository = "https://github.com/EvilBit-Labs/mmap-guard"
+documentation = "https://docs.rs/mmap-guard"
+keywords = ["mmap", "memmap", "memory-map", "file", "io"]
+categories = ["filesystem", "memory-management"]
+rust-version = "1.89"
+readme = "README.md"
+exclude = [
+    "/docs",
+    "/.vscode",
+    "/.github",
+    "/.git",
+    "/.env.*",
+    "*.orig",
+    "AGENTS.md",
+]
+
+# Workspace lint configuration
+[workspace.lints.rust]
+# NOTE: unsafe_code is NOT forbidden — this crate IS the unsafe boundary
+warnings = "deny"
+
+[workspace.lints.clippy]
+# Pedantic clippy configuration with proper priorities
+correctness = { level = "deny", priority = -1 }
+suspicious  = { level = "warn", priority = -1 }
+pedantic    = { level = "warn", priority = -1 }
+nursery     = { level = "warn", priority = -1 }
+cargo       = { level = "warn", priority = -1 }
+
+# Security-focused linting
+as_conversions          = "warn"
+as_ptr_cast_mut         = "warn"
+cast_ptr_alignment      = "warn"
+float_cmp               = "warn"
+indexing_slicing        = "warn"
+arithmetic_side_effects = "warn"
+integer_division        = "warn"
+modulo_arithmetic       = "warn"
+expect_used             = "warn"
+
+# Security anti-patterns
+dbg_macro        = "warn"
+todo             = "warn"
+unimplemented    = "warn"
+unreachable      = "warn"
+panic            = "deny"
+unwrap_used      = "deny"
+exhaustive_enums = "warn"
+
+# The single unsafe block MUST be documented
+undocumented_unsafe_blocks = "deny"
+
+# Performance and correctness
+perf                          = { level = "warn", priority = -1 }
+clone_on_ref_ptr              = "warn"
+create_dir                    = "warn"
+exit                          = "warn"
+filetype_is_file              = "warn"
+large_stack_arrays            = "warn"
+let_underscore_must_use       = "warn"
+lossy_float_literal           = "warn"
+map_err_ignore                = "warn"
+match_same_arms               = "warn"
+missing_assert_message        = "warn"
+missing_docs_in_private_items = "allow"
+mutex_atomic                  = "warn"
+mutex_integer                 = "warn"
+rc_buffer                     = "warn"
+rc_mutex                      = "warn"
+redundant_type_annotations    = "warn"
+same_name_method              = "warn"
+self_named_module_files       = "warn"
+str_to_string                 = "warn"
+string_add                    = "warn"
+string_add_assign             = "warn"
+string_lit_as_bytes           = "warn"
+trivial_regex                 = "warn"
+unnecessary_self_imports      = "warn"
+unseparated_literal_suffix    = "warn"
+unused_async                  = "warn"
+verbose_file_reads            = "warn"
+wildcard_enum_match_arm       = "warn"
+zero_sized_map_values         = "warn"
+
+# Proper, but pedantic
+cargo_common_metadata    = "warn"
+multiple_crate_versions  = "warn"
+missing_errors_doc       = "warn"
+missing_panics_doc       = "deny"
+must_use_candidate       = "warn"
+cast_possible_truncation = "warn"
+cast_precision_loss      = "warn"
+cast_sign_loss           = "warn"
+module_name_repetitions  = "warn"
+similar_names            = "warn"
+too_many_lines           = "warn"
+
+[dependencies]
+memmap2 = "0.9.10"
+
+[dev-dependencies]
+tempfile = "3.26.0"
+
+[lints]
+workspace = true
+
+[profile.release]
+lto           = "thin"
+codegen-units = 1
+strip         = true
+
+[profile.dist]
+inherits        = "release"
+lto             = "thin"
+overflow-checks = true
+strip           = true
