@@ -35,7 +35,7 @@ If the underlying file is **truncated or modified by another process** while map
 - **Unix:** `SIGBUS` signal
 - **Windows:** Access violation (structured exception)
 
-This is inherent to memory-mapped I/O and **cannot be fully prevented** without advisory file locking. The OS kernel does not provide a way to atomically verify file integrity while reading from a mapping.
+This is inherent to memory-mapped I/O. The advisory lock acquired by `map_file` mitigates but does not eliminate this risk, since non-cooperating processes may ignore the lock. The OS kernel does not provide a way to atomically verify file integrity while reading from a mapping.
 
 ### Mitigation Strategies
 

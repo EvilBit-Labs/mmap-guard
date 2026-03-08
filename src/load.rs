@@ -2,7 +2,7 @@
 //!
 //! [`load`] is the recommended entry point for CLI tools that accept both file
 //! paths and piped input. It memory-maps regular files for zero-copy access and
-//! falls back to heap allocation for non-seekable sources.
+//! reads stdin into a heap buffer when the path is `"-"`.
 
 use std::io::{self, Read};
 use std::path::Path;
@@ -82,17 +82,12 @@ fn read_bounded<R: Read>(reader: &mut R, max_bytes: Option<usize>) -> io::Result
 
 /// Load data from a file path, using memory mapping when possible.
 ///
-/// For regular files, this delegates to [`map_file`] for
-/// zero-copy access. The path must point to a non-empty, readable file.
+/// When `path` is not `"-"`, it must point to a non-empty, readable file;
+/// this delegates to [`map_file`] for zero-copy access.
 ///
 /// If `path` is `"-"`, stdin is read into a heap buffer with a default
-/// 1 GiB limit via [`load_stdin`]. For precise byte-limit control, call
-/// [`load_stdin`] directly with the desired cap.
-///
-/// # Note
-///
-/// When the caller needs a custom byte limit for stdin input, use
-/// `load_stdin(Some(limit))` directly instead of `load("-")`.
+/// 1 GiB limit via [`load_stdin`]. For a custom byte limit, call
+/// [`load_stdin`] directly.
 ///
 /// # Errors
 ///
