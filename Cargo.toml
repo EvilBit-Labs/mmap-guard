@@ -15,14 +15,46 @@ categories = ["filesystem", "memory-management"]
 rust-version = "1.89"
 readme = "README.md"
 exclude = [
-    "/docs",
-    "/.vscode",
+    # Directories
     "/.github",
     "/.git",
+    "/.vscode",
+    "/docs",
+    "/reports",
+    # CI / tooling config
+    "/.coderabbitai.yaml",
+    "/.editorconfig",
+    "/.markdownlint-cli2.jsonc",
+    "/.markdownlint.json",
+    "/.mdformat.toml",
+    "/.mergify.yml",
+    "/.pre-commit-config.yaml",
+    "/.prettierignore",
+    # Language version files
+    "/.bun-version",
+    "/.python-version",
+    # Build / release tooling
+    "about.hbs",
+    "about.toml",
+    "cliff.toml",
+    "codecov.yml",
+    "deny.toml",
+    "justfile",
+    "mise.lock",
+    "mise.toml",
+    "release-plz.toml",
+    "rust-toolchain.toml",
+    "rustfmt.toml",
+    # Docs shipped via docs.rs / repository, not the crate
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "GOTCHAS.md",
+    # THIRD_PARTY_NOTICES.md intentionally included for license compliance
+    # Misc
     "/.env.*",
     "*.orig",
-    "AGENTS.md",
-    "/reports",
 ]
 
 # Workspace lint configuration
