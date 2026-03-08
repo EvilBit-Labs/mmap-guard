@@ -17,6 +17,10 @@ queue_rules:
           - check-success = test-cross-platform (windows-latest, Windows)
           - check-success = coverage
 
+# NOTE: The check-success conditions in pull_request_rules duplicate those in
+# queue_rules.merge_conditions. This is intentional defense-in-depth: the rule
+# conditions gate queue entry, while merge_conditions gate the actual merge.
+# If either set is relaxed later, the other still enforces CI requirements.
 pull_request_rules:
     - name: Auto-approve and queue dependabot PRs
       conditions:
