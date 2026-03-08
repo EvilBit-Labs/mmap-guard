@@ -30,3 +30,4 @@ docs/book/
 .claude.local.md
 .env*
 !.env.example
+reports/
