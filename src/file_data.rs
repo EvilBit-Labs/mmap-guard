@@ -66,6 +66,7 @@ impl AsRef<[u8]> for FileData {
 
 // Compile-time assertions: FileData must be Send + Sync so it can be shared
 // across threads (Mmap and File are both Send + Sync).
+// LCOV_EXCL_START — compile-time only, never called at runtime
 const _: () = {
     const fn assert_send_sync<T: Send + Sync>() {}
     #[allow(dead_code)]
@@ -73,6 +74,7 @@ const _: () = {
         assert_send_sync::<FileData>();
     }
 };
+// LCOV_EXCL_STOP
 
 #[cfg(test)]
 mod tests {
