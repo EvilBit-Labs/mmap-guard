@@ -64,3 +64,9 @@ mod map;
 pub use file_data::FileData;
 pub use load::{load, load_stdin};
 pub use map::map_file;
+
+// Re-export internals for fuzz targets when the `__fuzz` feature is active.
+// This is NOT part of the public API — the leading underscores signal that.
+#[cfg(feature = "__fuzz")]
+#[doc(hidden)]
+pub use load::read_bounded;
