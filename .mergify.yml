@@ -16,6 +16,13 @@ queue_rules:
           - check-success = test-cross-platform (macos-latest, macOS)
           - check-success = test-cross-platform (windows-latest, Windows)
           - check-success = coverage
+          # Weekly workflows — block merge if they ran and failed, pass if absent
+          - check-success-or-neutral = fuzz (fuzz_read_bounded)
+          - check-success-or-neutral = fuzz (fuzz_map_file)
+          - check-success-or-neutral = compat (stable)
+          - check-success-or-neutral = compat (stable minus 2 releases)
+          - check-success-or-neutral = compat (stable minus 5 releases)
+          - check-success-or-neutral = compat (1.85.0)
 
 # NOTE: The check-success conditions in pull_request_rules duplicate those in
 # queue_rules.merge_conditions. This is intentional defense-in-depth: the rule

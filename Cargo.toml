@@ -12,7 +12,7 @@ repository = "https://github.com/EvilBit-Labs/mmap-guard"
 documentation = "https://docs.rs/mmap-guard"
 keywords = ["mmap", "memmap", "memory-map", "file", "io"]
 categories = ["filesystem", "memory-management"]
-rust-version = "1.89"
+rust-version = "1.85"
 readme = "README.md"
 exclude = [
     # Directories
@@ -20,6 +20,7 @@ exclude = [
     "/.git",
     "/.vscode",
     "/docs",
+    "/fuzz",
     "/reports",
     # CI / tooling config
     "/.coderabbitai.yaml",
@@ -138,12 +139,16 @@ module_name_repetitions  = "warn"
 similar_names            = "warn"
 too_many_lines           = "warn"
 
+[features]
+__fuzz = []
+
 [dependencies]
 fs4     = "0.13.1"
 memmap2 = "0.9.10"
 
 [dev-dependencies]
-tempfile = "3.26.0"
+proptest  = "1.6.0"
+tempfile  = "3.26.0"
 
 [lints]
 workspace = true

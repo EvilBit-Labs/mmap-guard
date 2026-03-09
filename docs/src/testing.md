@@ -20,10 +20,10 @@ just test-all
 
 Tests are co-located with their source modules using `#[cfg(test)]` blocks:
 
-| Module         | Tests                                                  |
-| -------------- | ------------------------------------------------------ |
-| `file_data.rs` | `Deref`/`AsRef` impls, empty variant                   |
-| `map.rs`       | Successful mapping, empty file rejection, missing file |
+| Module         | Tests                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `file_data.rs` | `Deref`/`AsRef` impls, empty variant                                                                             |
+| `map.rs`       | Successful mapping, empty file rejection, missing file                                                           |
 | `load.rs`      | File loading via mmap, stdin handling with byte caps, path resolution (`"-"` routing), empty/missing file errors |
 
 ### Clippy in Tests

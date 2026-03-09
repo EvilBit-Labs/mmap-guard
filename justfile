@@ -71,7 +71,7 @@ lint: lint-rust lint-actions lint-docs lint-justfile
 
 # Individual lint recipes
 lint-actions:
-    @{{ mise_exec }} actionlint .github/workflows/audit.yml .github/workflows/ci.yml .github/workflows/docs.yml .github/workflows/release-plz.yml .github/workflows/scorecard.yml .github/workflows/security.yml
+    @{{ mise_exec }} actionlint .github/workflows/audit.yml .github/workflows/ci.yml .github/workflows/compat.yml .github/workflows/docs.yml .github/workflows/fuzz.yml .github/workflows/release-plz.yml .github/workflows/scorecard.yml .github/workflows/security.yml
 
 lint-docs:
     @{{ mise_exec }} markdownlint-cli2 docs/**/*.md README.md
@@ -183,6 +183,42 @@ coverage-summary:
 
 # Full local CI parity check (dist-plan excluded — library crate has no binary targets)
 ci-check: pre-commit-run fmt-check lint-rust lint-rust-min test-ci build-release audit coverage-check docs-check
+
+# =============================================================================
+# LOCAL CI SIMULATION (act)
+# =============================================================================
+
+act_flags := "--container-architecture linux/amd64"
+# Workflows that only trigger on schedule/PR use workflow_dispatch to run in act
+act_dispatch := "workflow_dispatch"
+
+# Dry-run all CI workflows locally (no containers started)
+act-dry-run:
+    @act {{ act_flags }} -n -W .github/workflows/ci.yml
+    @act {{ act_flags }} -n -W .github/workflows/audit.yml {{ act_dispatch }}
+    @act {{ act_flags }} -n -W .github/workflows/compat.yml {{ act_dispatch }}
+    @act {{ act_flags }} -n -W .github/workflows/fuzz.yml {{ act_dispatch }}
+    @act {{ act_flags }} -n -W .github/workflows/security.yml {{ act_dispatch }}
+
+# Dry-run a specific workflow (use workflow_dispatch for schedule-only workflows)
+act-dry-run-workflow workflow event=act_dispatch:
+    @act {{ act_flags }} -n -W .github/workflows/{{ workflow }}.yml {{ event }}
+
+# Run all CI workflows locally (excludes release-plz, docs publish, scorecard)
+act-run:
+    act {{ act_flags }} -W .github/workflows/ci.yml
+    act {{ act_flags }} -W .github/workflows/audit.yml {{ act_dispatch }}
+    act {{ act_flags }} -W .github/workflows/compat.yml {{ act_dispatch }}
+    act {{ act_flags }} -W .github/workflows/fuzz.yml {{ act_dispatch }}
+    act {{ act_flags }} -W .github/workflows/security.yml {{ act_dispatch }}
+
+# Run a specific workflow locally
+act-run-workflow workflow event=act_dispatch:
+    act {{ act_flags }} -W .github/workflows/{{ workflow }}.yml {{ event }}
+
+# Run a specific job from a workflow locally
+act-run-job workflow job event=act_dispatch:
+    act {{ act_flags }} -j {{ job }} -W .github/workflows/{{ workflow }}.yml {{ event }}
 
 # =============================================================================
 # DISTRIBUTION AND PACKAGING

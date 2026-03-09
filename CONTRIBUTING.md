@@ -8,13 +8,13 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 
 ## Gotchas
 
-Before working in a specific area, check [GOTCHAS.md](GOTCHAS.md) for hard-won lessons and edge cases organized by domain. It covers unsafe code rules, clippy/rustdoc pitfalls, CI quirks, pre-commit hook behavior, and platform-specific mmap limitations.
+Before working in a specific area, check [GOTCHAS.md](GOTCHAS.md) for hard-won lessons and edge cases organized by domain. It covers unsafe code rules, clippy/rustdoc pitfalls, CI quirks, pre-commit hook behavior, platform-specific mmap limitations, and fuzzing with cargo-fuzz.
 
 ## Getting Started
 
 ### Prerequisites
 
-- **Rust 1.89+** (edition 2024, stable toolchain)
+- **Rust 1.85+** (edition 2024, stable toolchain)
 - **Git** for version control
 - **[mise](https://mise.jdx.dev/)** for tool management (recommended)
 
@@ -45,6 +45,7 @@ All tools are managed via mise — run `mise install` to bootstrap:
 - **cargo-llvm-cov** — code coverage
 - **cargo-audit** / **cargo-deny** — security auditing
 - **cargo-about** — third-party license notices
+- **cargo-fuzz** — coverage-guided fuzzing (requires nightly)
 - **just** — task runner
 - **pre-commit** — git hooks
 - **mdbook** — documentation
@@ -166,6 +167,13 @@ cargo nextest run -- --nocapture
 
 # Check coverage
 just coverage-check               # 85% threshold
+
+# Run property tests
+cargo test --test prop_map_file
+
+# Run fuzz targets (requires nightly)
+cargo +nightly fuzz run fuzz_read_bounded -- -max_total_time=60
+cargo +nightly fuzz run fuzz_map_file -- -max_total_time=60
 ```
 
 ### Writing Tests
@@ -174,6 +182,8 @@ just coverage-check               # 85% threshold
 - Use `#[cfg(test)]` modules with `#[allow(clippy::unwrap_used, clippy::expect_used)]`
 - Include doc tests for public API examples
 - Test both success and error cases
+- Property tests using `proptest` are included in the test suite
+- Fuzz targets live in the `fuzz/` workspace and require nightly
 
 Example test structure:
 
@@ -232,7 +242,7 @@ All pull requests require review before merging. Reviewers check for:
 - **Style** — Follows project conventions, passes `cargo fmt` and `cargo clippy -- -D warnings`
 - **Documentation** — Public APIs have rustdoc with examples, AGENTS.md updated if architecture changes
 
-CI checks run before merge, including quality checks, tests, coverage, and cross-platform tests (Ubuntu, macOS, Windows).
+CI checks run before merge, including quality checks, tests, coverage, and cross-platform tests (Ubuntu, macOS, Windows). Weekly workflows run fuzzing (`fuzz.yml`) and compatibility checks across Rust versions (`compat.yml`). These weekly workflows use `check-success-or-neutral` for merge gating, allowing merges when checks are skipped on regular PRs but blocking merges if they fail in the merge queue.
 
 ### Developer Certificate of Origin (DCO)
 
