@@ -18,7 +18,7 @@ use std::fs::File;
 use std::io;
 use std::path::Path;
 
-use fs4::fs_std::FileExt;
+use fs4::FileExt;
 use memmap2::Mmap;
 
 use crate::FileData;
@@ -75,14 +75,14 @@ pub fn map_file(path: impl AsRef<Path>) -> io::Result<FileData> {
     }
 
     match FileExt::try_lock_shared(&file) {
-        Ok(true) => {} // Lock acquired successfully.
-        Ok(false) => {
+        Ok(()) => {} // Lock acquired successfully.
+        Err(fs4::TryLockError::WouldBlock) => {
             return Err(io::Error::new(
                 io::ErrorKind::WouldBlock,
                 format!("file is locked by another process: {}", path.display()),
             ));
         }
-        Err(e) => {
+        Err(fs4::TryLockError::Error(e)) => {
             return Err(io::Error::new(
                 e.kind(),
                 format!("failed to acquire shared lock on {}: {e}", path.display()),
