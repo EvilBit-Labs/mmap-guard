@@ -18,9 +18,9 @@ Safe, guarded memory-mapped file I/O for Rust. Wraps [`memmap2::Mmap::map()`](ht
 
 ## Why mmap-guard?
 
-Projects that enforce `#![forbid(unsafe_code)]` cannot call `memmap2::Mmap::map()` directly because it is `unsafe`. The alternative — `std::fs::read()` — copies the entire file into heap memory, which is impractical for disk images and multi-gigabyte binaries.
+Projects that enforce `#![forbid(unsafe_code)]` can't call `memmap2::Mmap::map()` directly, because it's `unsafe`. The usual fallback, `std::fs::read()`, copies the whole file onto the heap, which doesn't work for disk images or multi-gigabyte binaries.
 
-**mmap-guard** bridges this gap by **isolating** the unsafe boundary in a single, focused crate. By centralizing it here, we can concentrate testing, fuzzing, and hardening efforts on that one point — so every consumer benefits from those protections without reasoning about mmap safety themselves.
+mmap-guard puts that one unsafe call in a single crate, so the testing and fuzzing can concentrate on one place. Consumers get those protections without having to reason about mmap safety themselves.
 
 ## Features
 
@@ -130,7 +130,6 @@ Licensed under either of [Apache License 2.0](LICENSE-APACHE) or [MIT License](L
 ## Acknowledgments
 
 - [memmap2](https://github.com/RazrFalcon/memmap2-rs) for the underlying memory-mapping implementation
-- The Rust community for excellent tooling and ecosystem
 
 [ci-badge]: https://img.shields.io/github/actions/workflow/status/EvilBit-Labs/mmap-guard/ci.yml?style=flat-square
 [ci-link]: https://github.com/EvilBit-Labs/mmap-guard/actions/workflows/ci.yml
