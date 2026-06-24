@@ -143,8 +143,8 @@ too_many_lines           = "warn"
 __fuzz = []
 
 [dependencies]
-fs4     = "0.13.1"
-memmap2 = "0.9.10"
+fs4     = "1.1.0"
+memmap2 = "0.9.11"
 
 [dev-dependencies]
 proptest  = "1.6.0"
