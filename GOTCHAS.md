@@ -63,11 +63,11 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 
 ## Platform / mmap
 
-- `fs4::FileExt::try_lock_shared()` returns `Result<bool>`, NOT `Result<()>` -- `Ok(false)` means contention, not `Err`. Always `match` on the bool.
+- `fs4::FileExt::try_lock_shared()` (fs4 1.x) returns `Result<(), fs4::TryLockError>` -- `Ok(())` means the lock was acquired, `Err(TryLockError::WouldBlock)` means contention, and `Err(TryLockError::Error(io))` is a genuine I/O failure. Match all three. (fs4 0.x returned `Result<bool>` from `fs4::fs_std::FileExt`; the trait moved to the crate root and the return type changed in 1.0.)
 - `flock()` locks do not conflict within the same process on macOS -- lock contention tests must spawn a subprocess (e.g., `python3 -c "import fcntl; ..."`) to hold the exclusive lock.
 - Empty files cannot be memory-mapped -- `map_file()` returns an error for zero-length files. This is a deliberate pre-flight check.
 - SIGBUS from concurrent file truncation is a **known, documented limitation** -- it cannot be fully prevented without advisory file locking. It is explicitly out of scope for security reports (see SECURITY.md).
-- `map_file()` acquires a shared advisory lock via `fs4::fs_std::FileExt::try_lock_shared()` before mapping. Lock contention returns `WouldBlock`. The lock is held by the `File` inside `FileData::Mapped` and released on drop.
+- `map_file()` acquires a shared advisory lock via `fs4::FileExt::try_lock_shared()` before mapping. Lock contention returns `WouldBlock`. The lock is held by the `File` inside `FileData::Mapped` and released on drop.
 
 ## Fuzzing
 
