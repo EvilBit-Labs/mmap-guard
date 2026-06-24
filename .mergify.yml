@@ -1,121 +1,123 @@
 merge_queue:
-    max_parallel_checks: 1
+  max_parallel_checks: 1
 
 queue_rules:
-    - name: default
-      merge_method: squash
-      batch_size: 1
-      queue_conditions:
-          - check-success = quality
-          - check-success = test
-      merge_conditions:
-          - check-success = quality
-          - check-success = test
-          - check-success = test-cross-platform (ubuntu-latest, Linux)
-          - check-success = test-cross-platform (ubuntu-22.04, Linux)
-          - check-success = test-cross-platform (macos-latest, macOS)
-          - check-success = test-cross-platform (windows-latest, Windows)
-          - check-success = coverage
+  - name: default
+    merge_method: squash
+    batch_size: 1
+    queue_conditions:
+      - check-success = quality
+      - check-success = test
+    merge_conditions:
+      - check-success = quality
+      - check-success = test
+      - check-success = test-cross-platform (ubuntu-latest, Linux)
+      - check-success = test-cross-platform (ubuntu-22.04, Linux)
+      - check-success = test-cross-platform (macos-latest, macOS)
+      - check-success = test-cross-platform (windows-latest, Windows)
+      - check-success = coverage
           # Weekly workflows — block merge if they ran and failed, pass if absent
-          - check-success-or-neutral = fuzz (fuzz_read_bounded)
-          - check-success-or-neutral = fuzz (fuzz_map_file)
-          - check-success-or-neutral = compat (stable)
-          - check-success-or-neutral = compat (stable minus 2 releases)
-          - check-success-or-neutral = compat (stable minus 5 releases)
-          - check-success-or-neutral = compat (1.85.0)
+      - check-success-or-neutral = fuzz (fuzz_read_bounded)
+      - check-success-or-neutral = fuzz (fuzz_map_file)
+      - check-success-or-neutral = compat (stable)
+      - check-success-or-neutral = compat (stable minus 2 releases)
+      - check-success-or-neutral = compat (stable minus 5 releases)
+      - check-success-or-neutral = compat (1.85.0)
 
 # NOTE: The check-success conditions in pull_request_rules duplicate those in
 # queue_rules.merge_conditions. This is intentional defense-in-depth: the rule
 # conditions gate queue entry, while merge_conditions gate the actual merge.
 # If either set is relaxed later, the other still enforces CI requirements.
 pull_request_rules:
-    - name: Auto-approve and queue dependabot PRs
-      conditions:
-          - base = main
+  - name: Auto-approve and queue dependabot PRs
+    conditions:
+      - base = main
+      - author = dependabot[bot]
+      - -draft
+      - label != do-not-merge
+      - -files~=\.github/workflows/release\.yml
+      - check-success = DCO
+      - check-success = quality
+      - check-success = test
+      - check-success = test-cross-platform (ubuntu-latest, Linux)
+      - check-success = test-cross-platform (ubuntu-22.04, Linux)
+      - check-success = test-cross-platform (macos-latest, macOS)
+      - check-success = test-cross-platform (windows-latest, Windows)
+      - check-success = coverage
+    actions:
+      review:
+        type: APPROVE
+        message: Automatically approved by Mergify
+      queue:
+        name: default
+
+  - name: Auto-approve and queue dosubot PRs
+    conditions:
+      - base = main
+      - author = dosubot[bot]
+      - -draft
+      - label != do-not-merge
+      - check-success = DCO
+      - check-success = quality
+      - check-success = test
+      - check-success = test-cross-platform (ubuntu-latest, Linux)
+      - check-success = test-cross-platform (ubuntu-22.04, Linux)
+      - check-success = test-cross-platform (macos-latest, macOS)
+      - check-success = test-cross-platform (windows-latest, Windows)
+      - check-success = coverage
+    actions:
+      review:
+        type: APPROVE
+        message: Automatically approved by Mergify
+      queue:
+        name: default
+
+  - name: Auto-merge release-plz PRs
+    conditions:
+      - base = main
+      - head ~= ^release-plz-
+      - -draft
+      - label != do-not-merge
+      - check-success = DCO
+    actions:
+      queue:
+        name: default
+
+  - name: Keep bot PRs up to date with main
+    conditions:
+      - base = main
+      - -conflict
+      - -draft
+      - or:
           - author = dependabot[bot]
-          - -draft
-          - label != do-not-merge
-          - -files~=\.github/workflows/release\.yml
-          - check-success = DCO
-          - check-success = quality
-          - check-success = test
-          - check-success = test-cross-platform (ubuntu-latest, Linux)
-          - check-success = test-cross-platform (ubuntu-22.04, Linux)
-          - check-success = test-cross-platform (macos-latest, macOS)
-          - check-success = test-cross-platform (windows-latest, Windows)
-          - check-success = coverage
-      actions:
-          review:
-              type: APPROVE
-              message: Automatically approved by Mergify
-          queue:
-              name: default
-
-    - name: Auto-approve and queue dosubot PRs
-      conditions:
-          - base = main
           - author = dosubot[bot]
-          - -draft
-          - label != do-not-merge
-          - check-success = DCO
-          - check-success = quality
-          - check-success = test
-          - check-success = test-cross-platform (ubuntu-latest, Linux)
-          - check-success = test-cross-platform (ubuntu-22.04, Linux)
-          - check-success = test-cross-platform (macos-latest, macOS)
-          - check-success = test-cross-platform (windows-latest, Windows)
-          - check-success = coverage
-      actions:
-          review:
-              type: APPROVE
-              message: Automatically approved by Mergify
-          queue:
-              name: default
-
-    - name: Auto-merge release-plz PRs
-      conditions:
-          - base = main
           - head ~= ^release-plz-
-          - -draft
-          - label != do-not-merge
-          - check-success = DCO
-      actions:
-          queue:
-              name: default
-
-    - name: Keep bot PRs up to date with main
-      conditions:
-          - base = main
-          - -conflict
-          - -draft
-          - or:
-                - author = dependabot[bot]
-                - author = dosubot[bot]
-                - head ~= ^release-plz-
-      actions:
-          update: {}
+    actions:
+      update: {}
 
 merge_protections:
-    - name: CI must pass
-      description: >-
-          All CI checks must pass. Release-plz PRs are exempt because
-          they only bump versions and changelogs (code was already tested
-          on main), and GITHUB_TOKEN-triggered force-pushes suppress CI.
-      if:
-          - base = main
-          - "-head ~= ^release-plz-"
-      success_conditions:
-          - check-success = quality
-          - check-success = test
-          - check-success = test-cross-platform (ubuntu-latest, Linux)
-          - check-success = test-cross-platform (ubuntu-22.04, Linux)
-          - check-success = test-cross-platform (macos-latest, macOS)
-          - check-success = test-cross-platform (windows-latest, Windows)
-          - check-success = coverage
+  - name: CI must pass
+    description: >-
+      All CI checks must pass. Release-plz PRs are exempt because
+      they only bump versions and changelogs (code was already tested
+      on main), and GITHUB_TOKEN-triggered force-pushes suppress CI.
+    if:
+      - base = main
+      - "-head ~= ^release-plz-"
+    success_conditions:
+      - check-success = quality
+      - check-success = test
+      - check-success = test-cross-platform (ubuntu-latest, Linux)
+      - check-success = test-cross-platform (ubuntu-22.04, Linux)
+      - check-success = test-cross-platform (macos-latest, macOS)
+      - check-success = test-cross-platform (windows-latest, Windows)
+      - check-success = coverage
 
-    - name: Do not merge outdated PRs
-      description: Make sure PRs are within 10 commits of the base branch before merging
-      if:
-          - base = main
-      success_conditions:
-          - "#commits-behind <= 3"
+  - name: Do not merge outdated PRs
+    description: Make sure PRs are within 10 commits of the base branch before merging
+    if:
+      - base = main
+    success_conditions:
+      - "#commits-behind <= 3"
+merge_protections_settings:
+  reporting_method: check-runs
