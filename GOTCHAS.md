@@ -16,8 +16,8 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 - `option_if_let_else` (nursery, promoted to deny via `-D warnings`) -- prefer `Option::map_or` / `map_or_else` over `match` on `Option` for simple transformations.
 - `indexing_slicing` = **warn** (promoted to deny via `-D warnings` in CI) -- direct slice indexing (e.g., `chunk[..n]`) is rejected. Use `#[allow(clippy::indexing_slicing)]` with a justification comment when bounds are provably safe; `.get()` can cause borrow-checker issues with mutable slices.
 - `unseparated_literal_suffix` = **warn** (promoted to deny via `-D warnings` in CI) -- literal suffixes must use underscore separation (`0_u8`, not `0u8`).
-- `multiple_crate_versions` = **warn** -- `fs4` and `tempfile` pull different `windows-sys` versions. The justfile `lint-rust` / `lint-rust-min` recipes pass `-A clippy::multiple_crate_versions` after `-D warnings` to prevent over-promotion. Do not change the Cargo.toml level to `deny` or `allow`.
-- The same `windows-sys` duplication causes `cargo deny check` to fail on the `bans` policy. `deny.toml` has a `skip` entry for `windows-sys` -- keep it until `fs4` and `rustix` converge on the same version.
+- `multiple_crate_versions` = **warn** -- the dependency tree still pulls a duplicate `getrandom` (`v0.3.x` via `rand_core`, `v0.4.x` via `tempfile`). The justfile `lint-rust` / `lint-rust-min` recipes pass `-A clippy::multiple_crate_versions` after `-D warnings` to prevent over-promotion. Do not change the Cargo.toml level to `deny` or `allow`. (Before fs4 1.1, the duplicate was `windows-sys`; fs4 1.1 and `rustix` converged on the same `windows-sys`, so that source is gone -- the allow remains for `getrandom`.)
+- The `deny.toml` `skip` list no longer needs a `windows-sys` entry (removed once fs4 1.1 / rustix converged -- cargo-deny flagged it as an `unnecessary-skip`). `cargo deny check` passes with `bans ok`; the remaining `getrandom` duplication does not trip the bans policy. Re-add a targeted `skip` only if a future duplicate actually fails `cargo deny check`.
 - `unwrap_used` = **deny**, `panic` = **deny** -- these fail the build in library code. Use `?` or proper error handling.
 - `expect_used` = **warn** -- prefer `?` over `.expect()` in library code.
 - Test modules need `#[allow(clippy::unwrap_used, clippy::expect_used)]` on the `mod tests` block.
@@ -63,11 +63,11 @@ Referenced from [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) --
 
 ## Platform / mmap
 
-- `fs4::FileExt::try_lock_shared()` returns `Result<bool>`, NOT `Result<()>` -- `Ok(false)` means contention, not `Err`. Always `match` on the bool.
+- `fs4::FileExt::try_lock_shared()` (fs4 1.x) returns `Result<(), fs4::TryLockError>` -- `Ok(())` means the lock was acquired, `Err(TryLockError::WouldBlock)` means contention, and `Err(TryLockError::Error(io))` is a genuine I/O failure. Match all three. (fs4 0.x returned `Result<bool>` from `fs4::fs_std::FileExt`; the trait moved to the crate root and the return type changed in 1.0.)
 - `flock()` locks do not conflict within the same process on macOS -- lock contention tests must spawn a subprocess (e.g., `python3 -c "import fcntl; ..."`) to hold the exclusive lock.
 - Empty files cannot be memory-mapped -- `map_file()` returns an error for zero-length files. This is a deliberate pre-flight check.
 - SIGBUS from concurrent file truncation is a **known, documented limitation** -- it cannot be fully prevented without advisory file locking. It is explicitly out of scope for security reports (see SECURITY.md).
-- `map_file()` acquires a shared advisory lock via `fs4::fs_std::FileExt::try_lock_shared()` before mapping. Lock contention returns `WouldBlock`. The lock is held by the `File` inside `FileData::Mapped` and released on drop.
+- `map_file()` acquires a shared advisory lock via `fs4::FileExt::try_lock_shared()` before mapping. Lock contention returns `WouldBlock`. The lock is held by the `File` inside `FileData::Mapped` and released on drop.
 
 ## Fuzzing
 
