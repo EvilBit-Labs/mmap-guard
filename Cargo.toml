@@ -144,7 +144,7 @@ __fuzz = []
 
 [dependencies]
 fs4     = "1.1.0"
-memmap2 = "0.9.10"
+memmap2 = "0.9.11"
 
 [dev-dependencies]
 proptest  = "1.6.0"
