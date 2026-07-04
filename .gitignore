@@ -34,3 +34,7 @@ fuzz/corpus/
 .env*
 !.env.example
 reports/
+
+# Personal Claude Code config — publish shared rules + settings, ignore personal ECC layer
+.claude/settings.local.json
+.claude/skills/skill-library/
