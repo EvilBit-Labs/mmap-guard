@@ -6,7 +6,7 @@
 ## Toolchain
 
 - Edition **2024**, stable toolchain, MSRV **1.85** (`rust-version` in `Cargo.toml`).
-- Format with `cargo fmt`; lint via `just lint` (fmt + clippy + actionlint + markdownlint).
+- Format with `cargo fmt`; lint via `just lint` (Rust, GitHub Actions, docs, and justfile lints).
 - `just ci-check` is full local CI parity.
 
 ## Error handling (differs from generic ECC advice)

@@ -6,7 +6,7 @@
 
 All dev workflows go through `just` (see `justfile`):
 
-- `just ci-check` — full local CI parity (fmt, clippy, test, audit, coverage)
+- `just ci-check` — full local CI parity (pre-commit, lint, tests, build, audit, coverage, docs)
 - `just lint` / `just test` / `just coverage-check` / `just audit` / `just deny`
 
 ## Pre-commit

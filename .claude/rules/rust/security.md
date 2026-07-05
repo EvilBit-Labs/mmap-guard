@@ -25,7 +25,9 @@
 
 ## Dependency & supply-chain checks
 
-- `just audit` (`cargo audit`) and `just deny` (`cargo deny check`) gate releases.
+- Run `just audit` (`cargo audit`) and `just deny` (`cargo deny check`) locally
+  before pushing. `just audit` is part of `just ci-check`; `cargo deny check` runs
+  in the scheduled `security.yml` workflow — neither is a hard merge/release gate.
 - The known `getrandom` duplicate is intentionally tolerated — see
   **GOTCHAS.md § Clippy Lints** before touching `deny.toml` or the
   `multiple_crate_versions` level.
